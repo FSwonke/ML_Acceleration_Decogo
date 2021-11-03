@@ -595,3 +595,50 @@ class CompactCuts:
         :rtype: list
         """
         return [len(self.cuts[k]) for k in range(self.block_model.num_blocks)]
+
+
+class Sub_Solver_Data():
+    '''
+    Stores input and output (direction & point)
+    Used as training data for training NN
+    '''
+
+    def __init__(self):
+        '''Constructor
+        Storing points
+        create dictionary (k -> [>>>list of tuples<<<])
+        where k is block_id,
+        '''
+        self.tdata = {}
+        for k in range(self.block_model.num_blocks):
+            self.tdata[k] = []
+
+    def __getitem__(self, item):
+        '''Index Operator
+        k indexes tuples
+        tuple stores directions and the corresponding points
+        j indexes lists
+        '''
+
+        k, j = item
+        return self.tdata[k][j]
+
+    def add_point(self, block_id, dir_orig_space, inner_point):
+        '''
+        Adds new inner point and direction in original space
+
+        :param block_id: int
+        :param point: ndarray
+        :param direction: ndarray
+
+        '''
+        self.tdata[block_id].append((inner_point, dir_orig_space))
+
+        return self.tdata[block_id]
+
+    def get_size(self, block_id):
+        '''
+        :param block_id: int
+        :returns number of directions and points (amount of training data)
+        '''
+        return len(self.tdata[block_id])
