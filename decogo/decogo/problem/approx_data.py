@@ -27,10 +27,11 @@ class ApproxData:
 
     def __init__(self, block_model):
         """Constructor method"""
-        # self.block_model = block_model
+        #self.block_model = block_model
         self.inner_points = InnerPoints(block_model)
         self.linearization_cuts = LinearizationCuts(block_model)
         self.compact_cuts = CompactCuts(block_model)
+        self.sub_solver_data = SubSolverData(block_model)
 
     def add_linearization_cuts(self, y, eps, x=None, block_id=None):
         """Adds linearization cuts by calling
@@ -67,6 +68,9 @@ class ApproxData:
         """Gets compact cut size by calling :meth:`CompactCuts.get_length`"""
         return self.compact_cuts.get_length()
 
+    def add_data(self, block_id, direction, point):
+        """" Adds new training data by calling: meth: SubSolverData.add_data"""
+        return self.sub_solver_data.add_data(block_id, direction, point)
 
 class InnerPoints:
     """Class which stores inner points and corresponding columns
@@ -597,18 +601,19 @@ class CompactCuts:
         return [len(self.cuts[k]) for k in range(self.block_model.num_blocks)]
 
 
-class Sub_Solver_Data():
+class SubSolverData:
     '''
     Stores input and output (direction & point)
     Used as training data for training NN
     '''
 
-    def __init__(self):
+    def __init__(self, block_model):
         '''Constructor
         Storing points
         create dictionary (k -> [>>>list of tuples<<<])
         where k is block_id,
         '''
+        self.block_model = block_model
         self.tdata = {}
         for k in range(self.block_model.num_blocks):
             self.tdata[k] = []
@@ -623,7 +628,7 @@ class Sub_Solver_Data():
         k, j = item
         return self.tdata[k][j]
 
-    def add_point(self, block_id, dir_orig_space, inner_point):
+    def add_data(self, block_id, direction, point):
         '''
         Adds new inner point and direction in original space
 
@@ -632,7 +637,7 @@ class Sub_Solver_Data():
         :param direction: ndarray
 
         '''
-        self.tdata[block_id].append((inner_point, dir_orig_space))
+        self.tdata[block_id].append((direction, point))
 
         return self.tdata[block_id]
 

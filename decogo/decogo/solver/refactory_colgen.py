@@ -759,14 +759,15 @@ class RefactoryColGen:
                                                       x_k=x_k)
                 if reduced_cost > -0.01:
                     feasible_point, reduced_cost, primal_bound, _, \
-                     is_new_point, column = \
+                     is_new_point, column, data = \
                      self.global_solve_subproblem(
                          block_id, direction, heuristic=heuristic)
+                logger.info('Training Data {0}'.format(len(data)))
             else:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
-                 column = self.global_solve_subproblem(
+                 column, data = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
-
+                logger.info('Training Data {0}'.format(len(data)))
         reduced_cost = round(reduced_cost, 3)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
@@ -811,6 +812,10 @@ class RefactoryColGen:
             self.problem.sub_problems[block_id].global_solve(
                 direction=dir_orig_space, result=self.result)
 
+        #store data for the ML-Model
+        data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
+
+
         column = None
         if compute_reduced_cost is True:
             # compute reduced cost
@@ -841,7 +846,7 @@ class RefactoryColGen:
             self.result.optimal_subproblems = False
 
         return feasible_point, reduced_cost, primal_bound, dual_bound, \
-            is_new_point, column
+            is_new_point, column, data
 
     def get_slack_directions(self, slacks):
         """Computes new direction based on the slack values of IA master problem

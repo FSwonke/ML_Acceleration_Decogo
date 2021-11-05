@@ -3,6 +3,7 @@
 import logging
 
 from decogo.problem.approx_data import ApproxData
+from decogo.problem.approx_data import SubSolverData
 from decogo.problem.master_problem import MasterProblems
 
 logger = logging.getLogger('decogo')
@@ -35,6 +36,7 @@ class DecomposedProblem:
                                               self.approx_data)
         self.linear_block = [k for k in range(self.block_model.num_blocks)
                              if self.block_model.sub_models[k].linear is True]
+        self.subsolverdata = SubSolverData(block_model)
 
     def add_inner_point(self, block_id, point, min_inner_point_dist=None):
         """Adds an inner point to the list of points and updates
@@ -93,4 +95,8 @@ class DecomposedProblem:
         """Evaluates the violation of global linear constraints, see
         :meth:`model.block_model.BlockModel.evaluate_violation_linear_global_constraints`"""
         return self.block_model.eval_viol_lin_global_constraints(point)
+
+    def training_data(self, block_id, dir_orig_space, feasible_point):
+
+        return self.approx_data.add_data(block_id, dir_orig_space, feasible_point)
 
