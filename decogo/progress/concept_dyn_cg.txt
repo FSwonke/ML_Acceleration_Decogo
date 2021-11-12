@@ -1,0 +1,266 @@
+Title of Concept
+----------------
+dynamic CG algorithm for MINLP
+
+1 Background
+------------
+
+Describe
+* Project background: motivation of the concept
+* status quo of our software
+* refer to existing documentation, if applicable
+
+- CG algorithm or Danzig-Wolfe decomposition (inner approximation) aims to provide strong dual bound for MIPs/MINLPs.
+
+- General block-separate decomposed MINLPs are reformulated and obtained by applying automatic decomposition
+on the original MINLPs.
+	•  Nonlinear constraints are decomposed to atomic blocks with size of variables less than or equal to 3.
+
+- Dual bound provided by CG algorithm on the general block-separate decomposed MINLP is not good enough, which leads to a large duality gap.
+
+- Primal heuristics cannot find good feasible solution when duality gap is large.
+
+- To improve the solution quality of decogo. A stronger dual bound is required to have a smaller duality gap.
+
+
+2 Functional description and non-functional requirements
+--------------------------------------------------------
+
+�WHAT�-Part
+
+Describe the goal
+* what this concept shall achieve (new or changed functionality)
+* what constraints must be fulfilled (e.g. performance aspects)
+Goals shall be verifiable such they can be tested in the end. If the verifiability is not obvious (e.g. �the size of the network shall be reduced substantially�), please consider how measurability of the targets can be achieved. Details, however, do not have to be described here. It suffices to take them into account when the tests are described below.
+
+- Implementation of dynamic CG algorithm based on current version of decogo to improve solution quality
+	•  Dynamic CG algorithm aims to have dynamic aggregated/hyper blocks and generate long columns during the procedures of CG.
+	•  These long columns can potentially leads to a stronger dual bound and improve duality gap.
+	•  With a smaller enough duality gap, the primal heuristics could find near-optimal solution.
+
+
+In the following the design goals and the new design is described.
+
+- Implementation of new master problem with hyperblocks.
+- Implementation of block aggregation, strategies for block aggregation.
+- Implementation of updating master problem and generating new subproblems regarding hyperblocks during CG procedures.
+
+
+3 Design and implementation outline
+-----------------------------------
+
+�HOW shall it work�-Part
+
+Describe
+* Class design
+* (Public) Interfaces of classes
+* Outline of the implementation (in cases when the implementation approach is a critical part of the overall solution, e.g., when a new, non-trivial algorithm shall be introduced)
+* refer to existing documentation, if applicable
+
+The details of the concept and algorithm  are referred to doc\papers\2021_04_minlp_dyn_cg
+
+-Main changes/updates
+
+• New container KT (list): store indexes of atomic blocks for each block t \in T (I think we just need KT, and store directly in the algorithm class)
+• New container T (list): indexes of hyper-block/atomic blocks (I think we don't need to store this explicitly, for describing the staff it is alright to use it)
+• New Solver Class contains the algorithms for dynamic CG.
+• New MasterProblem should include KT and T and corresponding constraints and keep updated during the main algorithm
+
+-Dynamic CG can be implemented based on the current version of decogo,
+	and the goal to make least changes on decogo for the implementation.
+	One of the easier ways is to design new classes that inherit from the
+	existing classes in decogo for implementing non-existing functions.
+	For the following class design, we design new classes.
+
+-On the other hands, we can just extend the old classes by adding new methods
+	and new attributes. The trick part could be some extensions and changes, which might
+	result in issues in the current CG algorithm, and we need to spend time to evaluate
+	if some changes and extension on the existing classes are compatible with the
+	current algorithm.
+
+- Class design for aggregated subproblem:
+• fixedNLP problem for aggregated sub-problems
+(create separate solve-method for solving aggreagted fixedNLP, this can be implemented by
+(de)activating blocks and global constraints, test it if it's true)
+• MipProject problem for aggregated sub-problems (create separate solve-method for solving aggreagted MipProjection, this can be implemented by
+(de)activating blocks and global constraints, test it if it's true)
+• Do we need MINLP problem for aggregated sub-problems? (Currently, no)
+• New mini inner master problem for solving aggregated convex LP
+
+		Class Name:
+
+		Super Classes
+
+		Methods
+
+		Attributes:
+
+- Class design for container of aggregated inner points:
+	• similar to current InnerPoints (do we need a new class or we can simply extend the current one without no danger?)
+
+If we still create a new class then:
+	• stores the data as follows dict [(K_t) -> list[(point in aggregated original space, corresponding column)], t in T]
+	• approx_data in dyn_cg requires adding new hyper-blocks and storing corresponding long columns.
+	• Stores the points and columns regarding aggregations only, len(K_t) > 1, t \in T (for len(K_t) = 1, t \in T, we may use the current InnerPoints)
+
+		Class Name: AggInnerPoints
+
+		Methods
+		def __init__ ()
+		def add_blocks(self, K_t):
+
+		Attributes:
+
+
+-Class design for new inner master problems:
+
+• What is new:
+	○ Add hyper-blocks;
+	○ Add short/long columns for block t;
+	○ Add constraints enforce the overlapping part of blocks are equivalent: w_k=v_{tk}
+
+		Class Name: ExtendedInnerMasterProblem
+
+		Super Classes: InnerMasterProblem(???)
+		# InnerMasterProblem class relies on InnerPoints and we need to define AggInnerPoints (?)
+		# we may use both InnerPoints regarding atomic blocks
+
+		Methods
+				def __init__ (block_model, dyn_approx_data)
+				def update_inner_master_problem(hat_hyper_blocks, dyn_approx_data)
+
+		Attributes:
+
+		-------------------------------------------------------------------------------
+
+		Class Name: MiniInnerMasterProblem
+
+		# used for solving aggregated subproblem using CG heurisitc algorithm
+
+		# defined only regarding the subset of atomic blocks based on a single aggregation, it does not use several aggregations at the same time (see ExtendedInnerMasterProblem)
+
+		Methods
+				def __init__ (block_model, dyn_approx_data)
+
+		Attributes:
+
+
+
+- class design for dynamic CG solver
+• New method for block aggregation (strategies)
+• New method for the main algorithm of dynamic CG
+
+		Class Name: DynColGen
+
+		Methods
+		def __init__ (self, problem, settings, result)
+		def solve()
+				""" overlapping solve method, main algorithm of dynamic CG"""
+		def aggregateBlocks()
+				""" a general method for aggregating blocks"""
+
+		Attributes:
+
+
+4 Critical implementation details
+---------------------------------
+
+�HOW shall I do it�-Part
+
+Describe details of the implementation.
+
+This section can be kept very short or can even be empty if the implementation is considered to be clear enough for the developers because
+* No major difficulties are expected and
+* The developer is sufficiently familiar with the corresponding part of the software
+
+Details about the main algorithm and aggregation
+
+	- Algorithm for aggregating blocks
+	# creates new hyper-blocks by aggregation of existing blocks
+
+	Ideas for selecting new hyper-blocks:
+
+		idea 1: check copy constraints; Comparing resources of copy constraints between primal solution
+		and LP master solution. The difficulty could be that whether primal solution is available.
+		If primal solution cannot be found, do local search from MP solution, which means projecting local MP solution
+		to MINLP sub-model to find a local solution that is feasible to the sub-model.
+
+		idea 2: comparing global feasible and local feasible sols of FastFwCG:
+			Global feasible (solution of FW), solution of linearized problem (local feasible).
+
+	- Management of blocks:
+		A block which is contained in another hyper-block is marked as redundant.
+		(columns of redundant hyper-blocks could be removed)
+		It is required to have management of redundant blocks for the master problem.
+
+	- FastAggSubSolve: see Algorithm 4 Fast aggregated MINLP sub-problem Solver in 2021_04_minlp_dyn_cg
+		• New SolPoolMipProject: perform MIP projection for local blocks
+			○ switching on variables of aggregated block
+			○ switching on global constraints that only have variables from aggregated block
+		• New SolveFixedNlp: perform an NLP (local) search
+			○ switching on variables of aggregated block
+			○ switching on global constraints that only have variables from aggregated block
+		• New mini inner master problem
+			○ switching on variables of aggregated block
+			○ switching on global constraints that only have variables from aggregated block
+
+
+	- FWColGen: see Algorithm 5 Fast column generation using a Frank-Wolfe method in 2021_04_minlp_dyn_cg
+		• To find active blocks and only generate columns for these blocks
+		• What are the active blocks?
+
+
+5 Test concept and execution summary
+------------------------------------
+
+This section must be updated and handed in for review by the developer when an activity is about to be published. In the end (after test execution), it shall describe all tests which shall be executed in addition to the mandatory publish tests and briefly summarize their results. The objective is not to have a detailed, reproducible test execution protocol but a brief indication about the nature and the level of detail of the tests such that the reviewer can judge whether the amount of testing is sufficient for the risk and complexity of the work package.
+Additional or adapted unit tests
+Brief summary suffices. Details referring to the implementation shall be described together with the concept for the production code.
+Regression tests from the test suite
+List standard regression test cases in our test suite. Explain if a more detailed analysis shall be done (beyond checking that the overall test passed).
+Additional (manual) tests
+Please list any other tests that need to be executed. Examples:
+* Manually constructed small examples where the result has been precalculated.
+* Detailed comparison (diff etc.) of two runs where a certain feature was switched on and off
+* Detailed log file
+* Performance tests on a dedicated environment to measure the speed up achieved by a feature.
+* Profiling, Memory tests
+
+6 Activity descriptions: coding, documentation and testing
+----------------------------------------------------------
+
+Devide the concept into activities.
+
+
+
+ID (time): Brief activity description
+--------------------------------------------
+1 (08.03.2021):Implementation of mini inner master problem as part work of Algorithm 4 in 2021_04_minlp_dyn_cg
+	• New class of mini inner master problem taking inner master problem as parent class/base class
+	• Find the global constraints that need to be deactivated according to aggregated block (add method for class block_model)
+	• deactivate global constraints and blocks and columns in blocks (set variables) according to aggregated block (add method for mini master problem)
+Solve mini inner master problem that adapts to any aggregated block
+
+2 (09.03.2021):Implementation of extended inner master problem see Equ (17) in 2021_04_minlp_dyn_cg
+	• New class is based on the script of InnerMasterProblem and add changes according to Equ (17)
+	• Modify container InnerPoint for hyper block and its long inner points and added container KT and MT used for constructing pyomo model for (17) . (done)
+	• Add method for transforming aggregated point to column in Block_model (todo)
+	• Introduce auxiliary variables w = {w_ki, k=2,3,…|K|, i=1,2,…,m,m+1}, (|K| number of atomic blocks; m number of global constraints) in pyomo model (done)
+	• Remove integrating set variables in global constraint and objective function from self.add_column; construct complete global constraints and objective function based on auxiliary variables in self.__init__. (done)
+	• New pyomo block for extended inner master problem: it should additionally include copy constraints with w and attribute K_t and M_t; set variables and set convex hull constraints remain the same.
+		○ Initiation of pyomo block model for atomic blocks remains unchanged, only adding copy constraints w_ki=v_ti for these atomic block in  self.__init__. (done)
+		○ Pyomo block for hyperblock, we need construct new pyomo block during the main algorithm by changing self.add_column (todo)
+Method to construct new pyomo block. (todo)
+
+3 (10.03.2021): Implementation of aggregated MIP projection and NLP subproblems vial block deactivation and tested it.
+	•added the implementation of Alg. 3 in the algorithm class.
+
+4 (11.03.2021): Implementation of extended inner master problem for changes in Equ (17) in 2021_04_minlp_dyn_cg
+	• Modified container InnerPoint to adapt to list of block-wise point/column for hyperblock (done), removed container MT; modified methods in Approx_Data for  list of block-wise point/column.
+	• Needed no more method for transforming aggregated point to column in Block_model.
+	• Added method for constructing pyomo block for hyperblock; adapted add_column method for hyper-blocks
+
+5 (12.03.2021): Implementation of new problems in decomposed_problem and dyn_colgen Classes
+	• Tested extended inner master probelm
+	• Added input for decomposed_problem and master_problem for stratege DynColgen
+	• Adapted methods in decomposed_problem and master_problems for hyper-blocks
