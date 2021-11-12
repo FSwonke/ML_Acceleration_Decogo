@@ -1,0 +1,23 @@
+notes, protocol
+#from every meeting, discussion
+===============================
+_______________________________
+            19.11.21
+
+_______________________________
+_______________________________
+            12.11.21
+
+- Location of Class SurrogateModel (as instance of PyomoSubProblems)
+    * further, using tdata as instance of the SurrogateModel or as parameter of init_training
+
+- Using Scikit-Learn "MLPClassifier" to build NN
+    * easy, intuitive implementation (other are possiblie e.g. Tensorflow, Pytorch)
+
+Next up
+- write concept (see "concept_dyn_cg.txt")
+
+- Setting up milestone plan 
+
+_______________________________
+
