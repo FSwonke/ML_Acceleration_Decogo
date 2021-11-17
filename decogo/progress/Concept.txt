@@ -64,22 +64,40 @@ Describe
             def get_size(block_id)
 
 - Class Design for training the neuronal network
+*parallel insatances of init class from pyomo_minlp_model (input_model)
+*from scikit-learn use: MLPClassifier, StandardScaler, train_test_split
 
     *Name: SurrogateModel
-        from scikit-learn use: MLPClassifier, StandardScaler, train_test_split
+
         Methods:
             def __init__()
                 #define the neuronal network
                 #hidden layers
                 #activation functions
                 #solver
+
             def init_training()
+                #initial training of the model
                 #scale data
                 #split into train and test data
-                #
+               
+            def continuetraining()
+                #accumulate more training data and update model
+                
+
 
 
 - Class Design for using the neuronal network
+
+    *Name: "predictinnerpoint"
+        Methods:
+            def __init__()
+
+            def predict(direction)
+                #uses the NN to predcit point
+                
+            def verfication()
+                #evaulates if prediction made by the model is right/wrong
 
 - class design for applying anomaly detection
 
