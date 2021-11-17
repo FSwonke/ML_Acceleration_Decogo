@@ -1,0 +1,120 @@
+Title of Concept
+----------------
+ML Acceleration for decogo
+
+1 Background
+------------
+
+Describe
+* Project background: motivation of the concept
+* status quo of our software
+* refer to existing documentation, if applicable
+
+- subproblem solving contributes most to the runtime of process
+
+- accelerating subproblem solving offers great potential to decrease runtime
+
+- solving subproblems is finding new columns which minimize reduced cost
+
+- reduced cost/dual solution "or" reduced cost direction is required to find new inner points
+
+- to calculate an inner point from direction an external solver is called (ipopt(NLP)/scip(MINLP))
+
+
+
+2 Functional description and non-functional requirements
+--------------------------------------------------------
+
+�WHAT�-Part
+
+Describe the goal
+* what this concept shall achieve (new or changed functionality)
+* what constraints must be fulfilled (e.g. performance aspects)
+Goals shall be verifiable such they can be tested in the end. If the verifiability is not obvious (e.g. �the size of the network shall be reduced substantially�), please consider how measurability of the targets can be achieved. Details, however, do not have to be described here. It suffices to take them into account when the tests are described below.
+
+- Implementation of a machine learning algorithm to accelerate Decogo. This is achieved by training a neuronal network to predict feasible (inner) points from directions.
+
+In Detail the following steps have to be fulfilled:
+
+- Implementation of storing training data (direction, point)
+
+- Implementation of training a Neuronal Network 
+
+- Implementation of applying the neuronal Network
+
+- Implementation of anomaly detection
+
+3 Design and implementation outline
+-----------------------------------
+
+�HOW shall it work�-Part
+
+Describe
+* Class design
+* (Public) Interfaces of classes
+* Outline of the implementation (in cases when the implementation approach is a critical part of the overall solution, e.g., when a new, non-trivial algorithm shall be introduced)
+* refer to existing documentation, if applicable
+
+- Class Design for training data
+
+    *Name: SubSolverData
+        using a dictionary for storage and list of tuples
+        Methods:
+            def add_data(block_id, direction, point)
+            def get_size(block_id)
+
+- Class Design for training the neuronal network
+
+    *Name: SurrogateModel
+        from scikit-learn use: MLPClassifier, StandardScaler, train_test_split
+        Methods:
+            def __init__()
+                #define the neuronal network
+                #hidden layers
+                #activation functions
+                #solver
+            def init_training()
+                #scale data
+                #split into train and test data
+                #
+
+
+- Class Design for using the neuronal network
+
+- class design for applying anomaly detection
+
+
+
+4 Critical implementation details
+---------------------------------
+
+�HOW shall I do it�-Part
+
+Describe details of the implementation.
+
+This section can be kept very short or can even be empty if the implementation is considered to be clear enough for the developers because
+* No major difficulties are expected and
+* The developer is sufficiently familiar with the corresponding part of the software
+
+
+
+5 Test concept and execution summary
+------------------------------------
+
+This section must be updated and handed in for review by the developer when an activity is about to be published. In the end (after test execution), it shall describe all tests which shall be executed in addition to the mandatory publish tests and briefly summarize their results. The objective is not to have a detailed, reproducible test execution protocol but a brief indication about the nature and the level of detail of the tests such that the reviewer can judge whether the amount of testing is sufficient for the risk and complexity of the work package.
+Additional or adapted unit tests
+Brief summary suffices. Details referring to the implementation shall be described together with the concept for the production code.
+Regression tests from the test suite
+List standard regression test cases in our test suite. Explain if a more detailed analysis shall be done (beyond checking that the overall test passed).
+Additional (manual) tests
+Please list any other tests that need to be executed. Examples:
+* Manually constructed small examples where the result has been precalculated.
+* Detailed comparison (diff etc.) of two runs where a certain feature was switched on and off
+* Detailed log file
+* Performance tests on a dedicated environment to measure the speed up achieved by a feature.
+* Profiling, Memory tests
+
+6 Activity descriptions: coding, documentation and testing
+----------------------------------------------------------
+
+Devide the concept into activities.
