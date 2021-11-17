@@ -13,7 +13,7 @@ logger = logging.getLogger('decogo')
 
 class ApproxData:
     """Wrapper class for storing approximation data, i.e. inner points,
-    linearization cuts, valid compact cuts and cells.
+    linearization cuts, valid compact cuts, cells and training data.
 
     :param block_model: Block model
     :type block_model: BlockModel
@@ -23,6 +23,8 @@ class ApproxData:
     :type linearization_cuts: LinearizationCuts
     :param compact_cuts: Stores valid compact cuts
     :type compact_cuts: CompactCuts
+    :param sub_solver_data: Stores training data (directions & inner points)
+    :type sub_solver_data: SubSolverData
     """
 
     def __init__(self, block_model):
@@ -71,6 +73,10 @@ class ApproxData:
     def add_data(self, block_id, direction, point):
         """" Adds new training data by calling: meth: SubSolverData.add_data"""
         return self.sub_solver_data.add_data(block_id, direction, point)
+
+    def get_training_data_size(self, block_id):
+
+        return self.sub_solver_data.get_size(block_id)
 
 class InnerPoints:
     """Class which stores inner points and corresponding columns
@@ -609,7 +615,7 @@ class SubSolverData:
 
     def __init__(self, block_model):
         '''Constructor
-        Storing points
+        Storing points and directions
         create dictionary (k -> [>>>list of tuples<<<])
         where k is block_id,
         '''
@@ -638,7 +644,6 @@ class SubSolverData:
 
         '''
         self.tdata[block_id].append((direction, point))
-
         return self.tdata[block_id]
 
     def get_size(self, block_id):

@@ -762,12 +762,14 @@ class RefactoryColGen:
                      is_new_point, column, data = \
                      self.global_solve_subproblem(
                          block_id, direction, heuristic=heuristic)
-                logger.info('Training Data {0}'.format(len(data)))
+                logger.info('Training Data {0} Block {1}, reducedcost > -0.01'.format(len(data), block_id))
+
             else:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
                  column, data = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
-                logger.info('Training Data {0}'.format(len(data)))
+                logger.info('Training Data generated: {0}; In Block {1}'.format(len(data), block_id))
+                print('data', data)
         reduced_cost = round(reduced_cost, 3)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
@@ -814,7 +816,9 @@ class RefactoryColGen:
 
         #store data for the ML-Model
         data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
-
+        #check, if get_size_training_data method works
+        ldata = self.problem.get_size_training_data(block_id)
+        print('ldata',ldata)
 
         column = None
         if compute_reduced_cost is True:

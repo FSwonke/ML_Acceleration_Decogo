@@ -97,6 +97,22 @@ class DecomposedProblem:
         return self.block_model.eval_viol_lin_global_constraints(point)
 
     def training_data(self, block_id, dir_orig_space, feasible_point):
-
+        """
+        Adds new directions corresponding points as training data to train the surrogate model
+        :param block_id:
+        :param dir_orig_space:
+        :param feasible_point:
+        :return training data
+        :rtype dict
+        """
         return self.approx_data.add_data(block_id, dir_orig_space, feasible_point)
+
+    def get_size_training_data(self, block_id):
+        """
+        Number of corresponding directions and points
+        :param block_id
+        :return size of training data to
+        :rtype int
+        """
+        return self.approx_data.get_training_data_size(block_id)
 

@@ -13,7 +13,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 class SurrogateModel:
     """Class for implementation, training of the NN
-    
+        as instance to the pyomosubproblem
+        write test
     """
     def __init__(self,block_id, tdata, neurons, max_iter = 200):
         """Constructor 
@@ -40,6 +41,8 @@ class SurrogateModel:
         self.y_scaled = StandardScaler().fit(self.data[block_id][1])
         X_train, X_test, y_train, y_test = train_test_split(x_scaled, y_scaled, random_state = 1)
 
+        clf = self.NN
+        clf.fit(X_train, y_train)
         
     def predict(self, direction):
         return point
