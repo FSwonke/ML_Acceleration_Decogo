@@ -3,7 +3,14 @@ notes, protocol
 ===============================
 _______________________________
             19.11.21
+            
+- specified description/requirements of Surrogate Model method
 
+- specified class design for using NN / Surrogate Model as parameter of PyomoSubModel 
+
+- set up milestone plan
+
+        All changes can be seen in the Concept.txt 
 _______________________________
 _______________________________
             12.11.21
