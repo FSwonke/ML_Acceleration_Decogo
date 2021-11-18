@@ -192,3 +192,18 @@ Please list any other tests that need to be executed. Examples:
 ----------------------------------------------------------
 
 Devide the concept into activities.
+
+
+7 plan & milestones: (2 days per week)
+
+* implement surrogate model in sub-problem solving (init_train & update surrogate model & test)                    2021.11 (2 weeks)  
+
+* implement ml-sub-solver with surrogate model (integration of surrogate model and other local sub-solver & test)  2021.12 (3 weeks)
+
+* implement evaluator (anormly detection & test)                                                                   2021.12 - 2022.1 (2 weeks)
+
+* tune overall ml-sub-solving (test & tune surrogate model/anormly detection model & extra test of algorithm )     2022.1 - 2022.2 (4 weeks)
+
+
+
+
