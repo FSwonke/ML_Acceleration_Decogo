@@ -68,32 +68,83 @@ Describe
 *from scikit-learn use: MLPClassifier, StandardScaler, train_test_split
 
     *Name: SurrogateModel
+        Parameters:
+            classifiers: dict, elemen: 
+            block_ids
+            scaling_parameters: dict, elemen: mean, var 
 
         Methods:
-            def __init__()
+            def __init__() todo
                 #define the neuronal network
                 #hidden layers
                 #activation functions
                 #solver
 
-            def init_training()
-                #initial training of the model
-                #scale data
-                #split into train and test data
-               
-            def continuetraining()
-                #accumulate more training data and update model
+            def init_train(training_data, block_id) todo
+                data from SubSolverData
+                # initial training of the model
+                # scale data
+                #
                 
+            def predict(direction) todo
+     
+            def test_init_train(vadidation_data, block_id)
+            
+            
+            
+            --------------------------------------------------------
+            def update() 
+                #accumulate more training data and update model
+
+            def update_model_specifications()                
 
 
 
 - Class Design for using the neuronal network
-
+     
+     - add SurrogateModel as parameter in
+     class decogo.pyomo_minlp_model.input_model.PyomoSubProblems(sub_models, cuts, block_id, settings)
+     
+      --method:
+        def ml_sub_solver_init_train()
+            call SurrogateModel.init_train()
+        def ml_sub_solver_test_init_train() 
+        
+     - add methods to
+     class decogo.solver.refactory_colgen.RefactoryColGen(problem, settings, result)
+        
+        def ml_sub_solver_init()
+            call SubProblems.ml_sub_solver_init_train() for all blocks
+            
+        def ml_sub_solver_test()
+             call ml_sub_solver_test_init_train()
+        
+        -------------------------------
+        def ml_sub_solver_update()
+        
+        
+     
+     - call ml_sub_solver_init() and ml_sub_solver_test() in solve() in the main iterations:
+        ------------------------------------
+          while True:
+            self.result.main_iterations += 1
+         -----------------------------------
+         
+     
+     
+     
+     
+     
+     Class MLSubSolver
     *Name: "predictinnerpoint"
+        Parameters:
+            SurrogateModel
+
         Methods:
             def __init__()
 
             def predict(direction)
+                SurrogateModel.predict()
                 #uses the NN to predcit point
                 
             def verfication()
@@ -113,6 +164,11 @@ Describe details of the implementation.
 This section can be kept very short or can even be empty if the implementation is considered to be clear enough for the developers because
 * No major difficulties are expected and
 * The developer is sufficiently familiar with the corresponding part of the software
+
+
+- Class Design for training the neuronal network
+
+      Implementation details of classifiers: todo
 
 
 
