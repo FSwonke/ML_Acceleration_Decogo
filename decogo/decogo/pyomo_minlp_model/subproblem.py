@@ -10,6 +10,8 @@ from pyomo.core.expr.visitor import identify_variables, replace_expressions
 from pyomo.environ import Binary, Integers, Reals, SolverStatus, \
     TerminationCondition
 from pyomo.opt import SolverFactory
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger('decogo')
 
@@ -461,3 +463,43 @@ class PyomoLineSearchSubProblem(PyomoSubProblemBase):
 
         return alpha, y_new
 
+
+class SurrogateModel:
+
+    def __init__(self, block_id, training_data):
+        '''Constructor for the Surrogate Model
+        '''
+        self.block_id = block_id
+        self.tdata = training_data
+        self.blockdata = self.tdata[block_id,:]
+        #dictionary: for each block one MLP-Classifier
+        self.clf_batch = {}
+        self.X = []
+        self.y = []
+        #seperating directions (inputs) and points (outputs) from each other
+        for i in range(len(self.blockdata)):
+            #directions (input)
+            if i == 0:
+                self.X = self.blockdata[i][0]
+            else:
+                self.X = np.concatenate((self.X, self.blockdata[i][0]))
+            #points (output)
+            self.y.append(self.blockdata[i][1])
+        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(10,10),
+                                 activation = 'relu',
+                                 max_iter = 100,
+                                 alphe=1e-5)
+
+    def init_train(self):
+        '''Method for initial training of the Surrogate Model
+        '''
+        j = 0
+        for j in range(len(self.blockdata)):
+            self.clf_batch[self.block_id].fit(self.X, self.y)
+
+    def predict(self, direction):
+        point = self.clf.predict(direction)
+        return point
+
+    def test_init_train(self):
+        pass

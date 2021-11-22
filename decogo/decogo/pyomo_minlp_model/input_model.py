@@ -21,7 +21,7 @@ from decogo.model.input_model_base import InputModelBase, OriginalProblemBase, \
 
 from decogo.pyomo_minlp_model.subproblem import PyomoMinlpSubProblem, \
     PyomoLineSearchSubProblem, PyomoProjectionSubProblem, \
-    PyomoResourceProjectionSubProblem
+    PyomoResourceProjectionSubProblem, SurrogateModel
 from decogo.pyomo_minlp_model.nlp_master_problem import NlpProblem
 from decogo.pyomo_minlp_model.projection_master_problem import \
     NlpResourceProjectionProblem, \
@@ -764,6 +764,7 @@ class PyomoSubProblems(SubProblemsBase):
         self.resource_proj_sub_problem = \
             PyomoResourceProjectionSubProblem(sub_models, cuts, block_id)
 
+        #self.surrogate_model = SurrogateModel(block_id)
     def global_solve(self, result, direction, start_point=None):
 
         solver_name = self.settings.minlp_solver
@@ -968,3 +969,10 @@ class PyomoSubProblems(SubProblemsBase):
         self.minlp_sub_problem.update_var_upper_bound(index)
         self.proj_sub_problem.update_var_upper_bound(index)
         self.line_search_sub_problem.update_var_upper_bound(index)
+
+    def ml_sub_solver_init_train(self, block_id):
+        return self.surrogate_model.init_train(block_id)
+
+    def ml_sub_solver_test_init_train(self, block_id):
+        return self.surrogate_model.test_init_train(block_id)
+

@@ -78,6 +78,7 @@ class ApproxData:
 
         return self.sub_solver_data.get_size(block_id)
 
+
 class InnerPoints:
     """Class which stores inner points and corresponding columns
 
