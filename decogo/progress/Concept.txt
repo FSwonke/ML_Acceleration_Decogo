@@ -72,21 +72,34 @@ Describe
             classifiers: dict, elemen: 
             block_ids
             scaling_parameters: dict, elemen: mean, var 
+            binary_index: dict, elemen: list of binary index in a block
 
         Methods:
-            def __init__() todo
+            def __init__(block_ids, binary_index) todo
                 #define the neuronal network
                 #hidden layers
                 #activation functions
                 #solver
-
-            def init_train(training_data, block_id) todo
-                data from SubSolverData
-                # initial training of the model
-                # scale data
-                #
+                     self.clf_batch = None
                 
-            def predict(direction) todo
+                # init define block_ids, binary indexes
+                     self.block_ids ...
+                     self.binary_index = binary_index
+
+            def init_train(block_id, training_data) todo
+                data from SubSolverData
+
+                # read and input and output data
+                    x, y
+                    y = training_data[:, binary_index[block_id]]
+                # preprocess input & output data -> scaled input output data
+                    package, method called here 
+                # initial training of the model -> fit self.clf_batch
+                    self.clf_batch.fit(x, y)
+                     
+            def predict(block_id, direction) todo
+            
+            
      
             def test_init_train(vadidation_data, block_id)
             
