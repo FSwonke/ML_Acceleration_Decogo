@@ -466,40 +466,50 @@ class PyomoLineSearchSubProblem(PyomoSubProblemBase):
 
 class SurrogateModel:
 
-    def __init__(self, block_id, training_data):
+    def __init__(self, block_id, binary_index):
         '''Constructor for the Surrogate Model
         '''
         self.block_id = block_id
-        self.tdata = training_data
-        self.blockdata = self.tdata[block_id,:]
-        #dictionary: for each block one MLP-Classifier
         self.clf_batch = {}
-        self.X = []
-        self.y = []
-        #seperating directions (inputs) and points (outputs) from each other
-        for i in range(len(self.blockdata)):
-            #directions (input)
-            if i == 0:
-                self.X = self.blockdata[i][0]
-            else:
-                self.X = np.concatenate((self.X, self.blockdata[i][0]))
-            #points (output)
-            self.y.append(self.blockdata[i][1])
-        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(10,10),
-                                 activation = 'relu',
-                                 max_iter = 100,
-                                 alphe=1e-5)
+        self.binary_index = {}
+        self.scaler = {}
 
-    def init_train(self):
+    def init_train(self, block_id, training_data):
         '''Method for initial training of the Surrogate Model
         '''
+        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(10, 10),
+                                                 activation='relu',
+                                                 max_iter=100,
+                                                alpha=1e-5)
+        #list of binary indexes for a given block
+        idx = self.binary_index[block_id]
+
+        y = []
+        blockdata = training_data[block_id, :]
+        for i in range(len(blockdata)):
+            if i == 0:
+                X = blockdata[i][0]
+                y.append(blockdata[i][1][idx])
+            else:
+                X = np.concatenate((X, blockdata[i][0]))
+                y.append(blockdata[i][1][idx])
+        #scale data (standardize)
+        self.scaler[block_id] = StandardScaler().fit(X)
+        X_scaled = self.scaler[block_id].transform(X)
         j = 0
         for j in range(len(self.blockdata)):
-            self.clf_batch[self.block_id].fit(self.X, self.y)
+            self.clf_batch[self.block_id].fit(X_scaled, y)
 
-    def predict(self, direction):
-        point = self.clf.predict(direction)
-        return point
+    def predict(self, block_id, direction):
+        # transform input
+        transformed_direction = self.scaler[block_id].transform(direction)
+        # predict method
+        prediction = self.clf_batch[block_id].predict(transformed_direction)
+        # inverse transform
+        # inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
+
+        return prediction  # inversetransform_pred
+
 
     def test_init_train(self):
         pass

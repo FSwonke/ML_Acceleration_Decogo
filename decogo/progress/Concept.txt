@@ -76,17 +76,19 @@ Describe
 
         Methods:
             def __init__(block_ids, binary_index) todo
-                #define the neuronal network
-                #hidden layers
-                #activation functions
-                #solver
-                     self.clf_batch = None
+                
+                     self.clf_batch = dict, elem = NN for each block
                 
                 # init define block_ids, binary indexes
                      self.block_ids ...
                      self.binary_index = binary_index
 
             def init_train(block_id, training_data) todo
+                #define the neuronal network
+                #hidden layers
+                #activation functions
+                #solver
+
                 # data from SubSolverData
 
                 # read/split input and output data
@@ -94,16 +96,22 @@ Describe
                     y = training_data[:, binary_index[block_id]]
                 # preprocess input data -> scaled input output data
                     Sklearn.Preprocessing -> StandardScaler
+                    self.scaler[block_id].transform(X)
                 # initial training of the model -> fit self.clf_batch
                     self.clf_batch.fit(x, y)
                      
             def predict(block_id, direction) todo
                 # read directions
                 # directions as input for the ML_Model
+                # preprocess input data -> standardize data
+                    StandardScaler (Sklearn) 
+                    transformed_direction = self.scaler[block_id].transform(direction)
                 # make predictions, sklearn -> MLPClassifier.predict
-
-                # return point/variable
-                # concatenate
+                    prediction = self.clf_batch[block_id].predict(transformed_direction)
+                # inverse transfrom standardization of output
+                    inversetransfrom_pred = self.scaler[block_id].inversetransfrom(prediction)
+                # return prediction
+                # 
             
             
      
