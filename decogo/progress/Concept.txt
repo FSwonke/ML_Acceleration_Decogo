@@ -115,13 +115,19 @@ Describe
             
             
      
-            def test_init_train(vadidation_data, block_id)
-            
+            def test_init_train(validation_data, block_id)      todo
+                # predict with SurrogateModel
+                # 10th iteration -> enough data to call init_train
+                # 15th iteration -> new data generated as validation_data
+                # test with more/less data to see if SurrogateModel is working
+                # show score, accuracy of SurrogateModel
+                # generate Plots (see presentation)
             
             
             --------------------------------------------------------
-            def update() 
-                #accumulate more training data and update model
+            def update(block_id, training_data)                                    todo
+                # accumulate more training data and update model
+                # 
 
             def update_model_specifications()                
 
@@ -136,7 +142,7 @@ Describe
         def ml_sub_solver_init_train()
             call SurrogateModel.init_train()
         def ml_sub_solver_test_init_train() 
-        
+    -----------------------------------done
      - add methods to
      class decogo.solver.refactory_colgen.RefactoryColGen(problem, settings, result)
         
@@ -220,8 +226,12 @@ Please list any other tests that need to be executed. Examples:
 
 Devide the concept into activities.
 
-
+26.11.2021      finished coding init_train, predict
+                Wednesday -> code test_init_train, test
+                Friday -> update_SurrogateMOdel
+3.12.2021       aim to finish testing init_train, predict; code update_SurrogateMOdel, how to pass in training_data to SurrogateModel
 7 plan & milestones: (2 days per week)
+-----------------------------------------------------------
 
 * implement surrogate model in sub-problem solving (init_train & update surrogate model & test)                    2021.11 (2 weeks)  
 
