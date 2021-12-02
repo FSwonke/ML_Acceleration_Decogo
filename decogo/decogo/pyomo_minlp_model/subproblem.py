@@ -468,48 +468,99 @@ class SurrogateModel:
 
     def __init__(self, block_id, binary_index):
         '''Constructor for the Surrogate Model
+        :param:
+        :type:
+        :param:
+        :type:
+        :param:
+        :type:
         '''
         self.block_id = block_id
         self.clf_batch = {}
-        self.binary_index = {}
+        self.binary_index = binary_index
         self.scaler = {}
 
     def init_train(self, block_id, training_data):
         '''Method for initial training of the Surrogate Model
+        :param: block_id
+        :type: int
+        :param: training_data
+        :type: dict -> includes a list of tuples with corresponding directions and points for each block
         '''
-        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(10, 10),
+        print('============================================ ')
+        print('             initiated training              ')
+        print('============================================ ')
+        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(100, 100),
                                                  activation='relu',
-                                                 max_iter=100,
-                                                alpha=1e-5)
+                                                 max_iter=1000,
+                                                 alpha=1e-5,
+                                                 verbose = False)
         #list of binary indexes for a given block
-        idx = self.binary_index[block_id]
+        index = self.binary_index[block_id]
 
-        y = []
-        blockdata = training_data[block_id, :]
+        #print('trainingdata')
+        #print(training_data)
+        #type blockdata: list of tuples, corresponding
+        blockdata = training_data[block_id]
+        y = np.zeros((len(blockdata), len(index)))
+        X = np.zeros((len(blockdata), len(blockdata[0][0])))
         for i in range(len(blockdata)):
-            if i == 0:
-                X = blockdata[i][0]
-                y.append(blockdata[i][1][idx])
-            else:
-                X = np.concatenate((X, blockdata[i][0]))
-                y.append(blockdata[i][1][idx])
-        #scale data (standardize)
-        self.scaler[block_id] = StandardScaler().fit(X)
-        X_scaled = self.scaler[block_id].transform(X)
-        j = 0
-        for j in range(len(self.blockdata)):
-            self.clf_batch[self.block_id].fit(X_scaled, y)
+            j = 0
+            for idx in index:
+                y[i, j] = blockdata[i][1][idx]
+                j += 1
+            for k in range(len(blockdata[0][0])):
+                X[i, k] = blockdata[i][0][k]
+            #if i == 0:
+                #X = blockdata[i][0]
+            #else:
+                #X = np.concatenate((X, blockdata[i][0]))
+
+            #scale data (standardize)
+            self.scaler[block_id] = StandardScaler().fit(X)
+            X_scaled = self.scaler[block_id].transform(X)
+
+            print('fit model to block:',block_id)
+            print('y')
+            print(y)
+            self.clf_batch[block_id].fit(X_scaled, y)
+
 
     def predict(self, block_id, direction):
+        '''Method for prediction of feasible points with Surrogate MOdel
+        :param:
+        :type:
+        :param:
+        :type:
+        '''
         # transform input
         transformed_direction = self.scaler[block_id].transform(direction)
         # predict method
         prediction = self.clf_batch[block_id].predict(transformed_direction)
         # inverse transform
-        # inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
+        #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
+        #score returns mean accuracy of the model
+        #score = self.clf_batch[block_id].score(direction)
 
-        return prediction  # inversetransform_pred
+        return prediction
 
+    def test_init_train(self, block_id, direction):
+        '''
+        :param: block_id
+        :type: int
+        :param: direction
+        :type: ndarray
+        :param: point
+        :type: ndarray
+        :returns: point
+        :rtype: list
+        '''
+        print('block_id')
+        print(block_id)
+        print('direction')
+        print(direction)
+        prediction = self.predict(block_id, np.array([direction]))
+        print('Prediction')
+        print(prediction)
 
-    def test_init_train(self):
-        pass
+        return prediction

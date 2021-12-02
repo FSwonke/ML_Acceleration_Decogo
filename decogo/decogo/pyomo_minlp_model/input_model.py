@@ -648,13 +648,17 @@ class PyomoSubModel(SubModelBase):
     def __init__(self, model, vars_in_block, block_id):
         """Constructor method"""
         super().__init__(vars_in_block, block_id)
-
+        self.binary_index = []
         # region Var creation
+        i = 0
         for var_name in self.vars_in_block:
+            #find indexes of var_name which are binaries
             var = model.find_component(var_name)
             self.variables.append(VarDomain(var.ub, var.lb, var.domain.name))
             if var.domain.name == 'Binary' or var.domain.name == 'Integers':
+                self.binary_index.append(i)#, check indexes
                 self.integer = True
+            i = i + 1
         # endregion
 
         # region creating NonlinearConstraint
@@ -750,6 +754,9 @@ class PyomoSubProblems(SubProblemsBase):
         self.block_id = block_id
         self.settings = settings
         self.integer = sub_models[block_id].integer
+        self.binary_index = {}  #extract binary index of each submodel, submodels[block_id].binary_index
+        self.binary_index[block_id] = sub_models[block_id].binary_index
+        print('binary index list:', self.binary_index[block_id], 'block: ', block_id)
         super().__init__(block_id)
 
         self.minlp_sub_problem = \
@@ -763,8 +770,8 @@ class PyomoSubProblems(SubProblemsBase):
 
         self.resource_proj_sub_problem = \
             PyomoResourceProjectionSubProblem(sub_models, cuts, block_id)
-
-        #self.surrogate_model = SurrogateModel(block_id)
+        #define binary index
+        self.surrogate_model = SurrogateModel(block_id, self.binary_index)
     def global_solve(self, result, direction, start_point=None):
 
         solver_name = self.settings.minlp_solver
@@ -970,9 +977,9 @@ class PyomoSubProblems(SubProblemsBase):
         self.proj_sub_problem.update_var_upper_bound(index)
         self.line_search_sub_problem.update_var_upper_bound(index)
 
-    def ml_sub_solver_init_train(self, block_id):
-        return self.surrogate_model.init_train(block_id)
+    def ml_sub_solver_init_train(self, block_id, training_data):
+        return self.surrogate_model.init_train(block_id, training_data)
 
-    def ml_sub_solver_test_init_train(self, block_id):
-        return self.surrogate_model.test_init_train(block_id)
+    def ml_sub_solver_test_init_train(self, block_id, direction):
+        return self.surrogate_model.test_init_train(block_id, direction)
 

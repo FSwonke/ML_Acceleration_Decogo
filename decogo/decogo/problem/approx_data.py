@@ -642,10 +642,12 @@ class SubSolverData:
         :param block_id: int
         :param point: ndarray
         :param direction: ndarray
+        :return:
+        :rtype:
 
         '''
         self.tdata[block_id].append((direction, point))
-        return self.tdata[block_id]
+        return self.tdata#[block_id]
 
     def get_size(self, block_id):
         '''

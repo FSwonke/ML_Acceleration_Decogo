@@ -106,6 +106,7 @@ class DecomposedProblem:
         :rtype dict
         """
         return self.approx_data.add_data(block_id, dir_orig_space, feasible_point)
+        #return self.approx_data.sub_solver_data
 
     def get_size_training_data(self, block_id):
         """

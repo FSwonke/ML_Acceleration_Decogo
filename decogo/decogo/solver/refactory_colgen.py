@@ -769,8 +769,15 @@ class RefactoryColGen:
                  column, data = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
                 logger.info('Training Data generated: {0}; In Block {1}'.format(len(data), block_id))
-                print('data', data)
+                #print('data', data)
         reduced_cost = round(reduced_cost, 3)
+
+        if not approx_solver and reduced_cost > -0.01:
+            self.init_ML(block_id, data)
+            dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
+            print('feasible Point')
+            print(feasible_point)
+            self.test_ML(block_id, dir_orig_space)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
@@ -813,12 +820,12 @@ class RefactoryColGen:
         feasible_point, primal_bound, dual_bound, _ = \
             self.problem.sub_problems[block_id].global_solve(
                 direction=dir_orig_space, result=self.result)
-
+        #print('feasible Point', feasible_point)
         #store data for the ML-Model
         data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
         #check, if get_size_training_data method works
         ldata = self.problem.get_size_training_data(block_id)
-        print('ldata',ldata)
+        #print('ldata',ldata)
 
         column = None
         if compute_reduced_cost is True:
@@ -981,3 +988,9 @@ class RefactoryColGen:
             'Pairs (index z_k values), such that z_k > 0, sorted by z_k values')
         for k in range(self.problem.block_model.num_blocks):
             logger.info('block {0}: {1}'.format(k, non_zero_z[k]))
+
+    def init_ML(self, block_id, training_data):
+        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data)
+
+    def test_ML(self, block_id, direction):
+        return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, direction)
