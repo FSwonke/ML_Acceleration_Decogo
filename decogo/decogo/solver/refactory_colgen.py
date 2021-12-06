@@ -135,6 +135,7 @@ class RefactoryColGen:
         while True:
 
             self.result.main_iterations += 1
+            print('iteration',self.result.main_iterations)
 
             tic_i_start = time.time()
 
@@ -759,25 +760,27 @@ class RefactoryColGen:
                                                       x_k=x_k)
                 if reduced_cost > -0.01:
                     feasible_point, reduced_cost, primal_bound, _, \
-                     is_new_point, column, data = \
+                     is_new_point, column, data, len_data = \
                      self.global_solve_subproblem(
                          block_id, direction, heuristic=heuristic)
-                logger.info('Training Data {0} Block {1}, reducedcost > -0.01'.format(len(data), block_id))
+                #logger.info('Training Data {0} Block {1}, reducedcost > -0.01'.format(len(data), block_id))
 
             else:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
-                 column, data = self.global_solve_subproblem(
+                 column, data, len_data = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
-                logger.info('Training Data generated: {0}; In Block {1}'.format(len(data), block_id))
+                #logger.info('Training Data generated: {0}; In Block {1}'.format(len(data), block_id))
                 #print('data', data)
         reduced_cost = round(reduced_cost, 3)
 
         if not approx_solver and reduced_cost > -0.01:
-            self.init_ML(block_id, data)
+            if len_data <= 8:
+                self.init_ML(block_id, data)
             dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
-            print('feasible Point')
-            print(feasible_point)
-            self.test_ML(block_id, dir_orig_space)
+            #print('feasible Point')
+            #print(feasible_point)
+            if len_data > 8:
+                self.test_ML(block_id, data, 6)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
@@ -824,8 +827,8 @@ class RefactoryColGen:
         #store data for the ML-Model
         data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
         #check, if get_size_training_data method works
-        ldata = self.problem.get_size_training_data(block_id)
-        #print('ldata',ldata)
+        len_data = self.problem.get_size_training_data(block_id)
+        print('ldata',len_data, 'block_id',block_id)
 
         column = None
         if compute_reduced_cost is True:
@@ -857,7 +860,7 @@ class RefactoryColGen:
             self.result.optimal_subproblems = False
 
         return feasible_point, reduced_cost, primal_bound, dual_bound, \
-            is_new_point, column, data
+            is_new_point, column, data, len_data
 
     def get_slack_directions(self, slacks):
         """Computes new direction based on the slack values of IA master problem
@@ -992,5 +995,5 @@ class RefactoryColGen:
     def init_ML(self, block_id, training_data):
         return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data)
 
-    def test_ML(self, block_id, direction):
-        return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, direction)
+    def test_ML(self, block_id, training_data, len_data):
+        return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data, len_data)

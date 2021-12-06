@@ -495,38 +495,35 @@ class SurrogateModel:
                                                  max_iter=1000,
                                                  alpha=1e-5,
                                                  verbose = False)
+        '''
         #list of binary indexes for a given block
         index = self.binary_index[block_id]
 
-        #print('trainingdata')
-        #print(training_data)
-        #type blockdata: list of tuples, corresponding
+
         blockdata = training_data[block_id]
         y = np.zeros((len(blockdata), len(index)))
         X = np.zeros((len(blockdata), len(blockdata[0][0])))
         for i in range(len(blockdata)):
             j = 0
             for idx in index:
-                y[i, j] = blockdata[i][1][idx]
+                y[i, j] = round(blockdata[i][1][idx])
                 j += 1
             for k in range(len(blockdata[0][0])):
                 X[i, k] = blockdata[i][0][k]
-            #if i == 0:
-                #X = blockdata[i][0]
-            #else:
-                #X = np.concatenate((X, blockdata[i][0]))
 
-            #scale data (standardize)
-            self.scaler[block_id] = StandardScaler().fit(X)
-            X_scaled = self.scaler[block_id].transform(X)
+        '''
+        #split training_data into input/output
+        X_train, y_train = self.split_data(block_id, training_data)
+        #scale data (standardize)
+        self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
+        X_scaled = self.scaler[block_id].transform(X_train)
 
-            print('fit model to block:',block_id)
-            print('y')
-            print(y)
-            self.clf_batch[block_id].fit(X_scaled, y)
+        print('fit model to block:',block_id)
+        print('y_train (output)')
+        print(y_train)
+        self.clf_batch[block_id].fit(X_scaled, y_train)
 
-
-    def predict(self, block_id, direction):
+    def predict(self, block_id, X,y):
         '''Method for prediction of feasible points with Surrogate MOdel
         :param:
         :type:
@@ -534,17 +531,18 @@ class SurrogateModel:
         :type:
         '''
         # transform input
-        transformed_direction = self.scaler[block_id].transform(direction)
+        transformed_direction = self.scaler[block_id].transform(X)
         # predict method
         prediction = self.clf_batch[block_id].predict(transformed_direction)
+
         # inverse transform
         #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
         #score returns mean accuracy of the model
-        #score = self.clf_batch[block_id].score(direction)
+        score = self.clf_batch[block_id].score(X,y)
 
-        return prediction
+        return prediction, score
 
-    def test_init_train(self, block_id, direction):
+    def test_init_train(self, block_id, training_data, len_data):
         '''
         :param: block_id
         :type: int
@@ -555,12 +553,43 @@ class SurrogateModel:
         :returns: point
         :rtype: list
         '''
-        print('block_id')
-        print(block_id)
-        print('direction')
-        print(direction)
-        prediction = self.predict(block_id, np.array([direction]))
+        print('============================================ ')
+        print('             initiated testing               ')
+        print('============================================ ')
+        X_test, y_test = self.split_data(block_id, training_data, len_data)
+        index = self.binary_index[block_id]
+        #point = np.take(feasible_point, index)
+
+        #print('block_id',block_id)
+        #print('direction (input): ', direction)
+
+        prediction, score = self.predict(block_id, X_test, y_test)
+        print('y_test (validation)')
+        print(y_test)
         print('Prediction')
         print(prediction)
+        print('score')
+        print(score)
 
         return prediction
+
+    def split_data(self, block_id, training_data, len_data = 0):
+        """
+        :param:
+        """
+        #list of binary indexes for a given block
+        index = self.binary_index[block_id]
+
+
+        blockdata = training_data[block_id]
+        y = np.zeros((len(blockdata)-len_data, len(index)))
+        X = np.zeros((len(blockdata)-len_data, len(blockdata[0][0])))
+        for i in range(0, len(blockdata)-len_data):
+            j = 0
+            for idx in index:
+                y[i, j] = round(blockdata[i][1][idx])
+                j += 1
+            for k in range(len(blockdata[0][0])):
+                X[i, k] = blockdata[i][0][k]
+
+        return X, y

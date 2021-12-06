@@ -772,6 +772,7 @@ class PyomoSubProblems(SubProblemsBase):
             PyomoResourceProjectionSubProblem(sub_models, cuts, block_id)
         #define binary index
         self.surrogate_model = SurrogateModel(block_id, self.binary_index)
+
     def global_solve(self, result, direction, start_point=None):
 
         solver_name = self.settings.minlp_solver
@@ -978,8 +979,20 @@ class PyomoSubProblems(SubProblemsBase):
         self.line_search_sub_problem.update_var_upper_bound(index)
 
     def ml_sub_solver_init_train(self, block_id, training_data):
+        """ initiates training of the surrogate model
+        :param: block_id
+        :type: int
+        :param: training_data
+        :type: dict
+        """
         return self.surrogate_model.init_train(block_id, training_data)
 
-    def ml_sub_solver_test_init_train(self, block_id, direction):
-        return self.surrogate_model.test_init_train(block_id, direction)
+    def ml_sub_solver_test_init_train(self, block_id, training_data, len_data):
+        """ tests the surrogate model, predicts feasible points from directions
+        :param: block_id
+        :type: int
+        :param: direction
+        :type: ndarray
+        """
+        return self.surrogate_model.test_init_train(block_id, training_data, len_data)
 
