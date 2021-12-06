@@ -115,7 +115,7 @@ Describe
             
             
      
-            def test_init_train(validation_data, block_id)      todo
+            def test_init_train(validation_data, block_id)      
                 # predict with SurrogateModel
                 # 10th iteration -> enough data to call init_train
                 # 15th iteration -> new data generated as validation_data
@@ -129,7 +129,16 @@ Describe
                 # accumulate more training data and update model
                 # 
 
-            def update_model_specifications()                
+            def update_model_specifications()     
+
+            def split_data(block_id, training_data, len_data = 0)
+                # splits training data (dictionary) into input/output - arrays
+                # param: X; nd array (n_samples, n_features)
+                # param: y; nd array (n_samples, n_outputs)
+                # len_data refers to the number of corresponding directions & points
+                # -> if != 0, determines how training data ist split into train/test data 
+                
+                returns X, y           
 
 
 
@@ -230,6 +239,13 @@ Devide the concept into activities.
                 Wednesday -> code test_init_train, test
                 Friday -> update_SurrogateMOdel
 3.12.2021       aim to finish testing init_train, predict; code update_SurrogateMOdel, how to pass in training_data to SurrogateModel
+                done:
+                coding test_init_train
+                update Surrogate_model
+                how to pass in training_data
+                training the surrogate model for some iterations
+                testing the Surrogate_model after some iterations
+                
 7 plan & milestones: (2 days per week)
 -----------------------------------------------------------
 
