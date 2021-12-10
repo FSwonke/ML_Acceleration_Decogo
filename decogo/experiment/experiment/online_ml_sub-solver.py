@@ -1,7 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-
+print(os.getcwd())
+import sys
+path = os.path.dirname(os.getcwd())
+while os.path.basename(path) != 'decogo':
+    path = os.path.dirname(path)
+sys.path.insert(0, path)
+print('path',path)
 from sklearn.neural_network import MLPRegressor
 from sklearn.neural_network import MLPClassifier
 from experiment_dataset import ExperimentData
@@ -14,7 +20,7 @@ from sklearn.decomposition import PCA
 from decogo.model.block_model import BlockModel
 from decogo.problem.decomposed_problem import \
     DecomposedProblem
-from decogo.tests.examples.tu.DESSLib_testmodel.DESS_blockstructure import \
+from tests.examples.tu.DESSLib_testmodel.DESS_blockstructure import \
     generate_model
 from decogo.pyomo_minlp_model.input_model import PyomoInputModel
 
@@ -140,6 +146,7 @@ class StreamBatchData:
     def online_clf_train(self, start_index, clf):
         """ Online train and evaluation of surrogate model """
         # online training data set
+        print('binaryIndex:',self.binary_index)
         x_tr = self.x[0:start_index, :]
         y_tr = self.y_clf[0:start_index, :]
         point_dim = self.x.shape[1]
@@ -170,8 +177,12 @@ class StreamBatchData:
             else:
                 clf.fit(x_tr_scaled, y_tr)
             new_direction = self.x[m, :]
+            print('x_tr',x_tr)
+            print('=======================')
+            print('y_tr', y_tr)
             x_new = x_scaler.transform(new_direction.reshape(1, -1))
             y_clf_new = clf.predict(x_new)
+            print('y_clf_new',y_clf_new)
             y_clf_new = y_clf_new.reshape(1, -1)
             y_pred_index.append(m)
             if y_pred_val is not None:
@@ -807,6 +818,62 @@ class DecogoEvaluation:
         return tilde_y, new_point_obj_val
 
 
+class SurrogateModel:
+
+    def __init__(self, block_id, binary_index):
+        '''Constructor for the Surrogate Model
+        '''
+        self.block_id = block_id
+        self.clf_batch = {}
+        self.binary_index = binary_index
+        self.scaler = {}
+
+    def init_train(self, block_id, training_data):
+        '''Method for initial training of the Surrogate Model
+        param: block_id
+        type: int
+        param: training_data
+        type: dict -> includes a list of tuples for each block
+        '''
+        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(10, 10),
+                                                 activation='relu',
+                                                 max_iter=100,
+                                                 alpha=1e-5)
+        # list of binary indexes for a given block
+        index = self.binary_index[block_id]
+
+        y = []
+        # type blockdata: list of tuples, corresponding
+        blockdata = training_data[block_id, :]
+        for i in range(len(blockdata)):
+            if i == 0:
+                X = blockdata[i][0]
+                for idx in index:
+                    y.append(blockdata[i][1][idx])
+            else:
+                X = np.concatenate((X, blockdata[i][0]))
+                for idx in index:
+                    y.append(blockdata[i][1][idx])
+            # scale data (standardize)
+            self.scaler[block_id] = StandardScaler().fit(X)
+            X_scaled = self.scaler[block_id].transform(X)
+
+            self.clf_batch[block_id].fit(X_scaled, y)
+
+    def predict(self, block_id, direction):
+        # transform input
+        transformed_direction = self.scaler[block_id].transform(direction)
+        # predict method
+        prediction = self.clf_batch[block_id].predict(transformed_direction)
+        # inverse transform
+        # inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
+
+        return prediction
+
+    def test_init_train(self):
+        pass
+
+
 if __name__ == '__main__':
     # input pyomo model
     superstructure = 'S4'
@@ -829,8 +896,11 @@ if __name__ == '__main__':
     # num_index = list(range(15, 75))   # block 1
     data_length = len(num_index)
     y_clean, _ = data_S4L4.point_clean(block_id=block_index)
+    print('y_clean: ', y_clean)
     y = y_clean[num_index, :]
+    print('y',y)
     x = data_S4L4.x[block_index][num_index, :]
+
     ia_sol = data_S4L4.ia_sol[block_index][num_index, :]
     stream_list = [10]
     regr_batch = {}

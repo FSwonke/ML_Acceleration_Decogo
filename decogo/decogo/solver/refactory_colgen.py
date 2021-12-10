@@ -774,13 +774,13 @@ class RefactoryColGen:
         reduced_cost = round(reduced_cost, 3)
 
         if not approx_solver and reduced_cost > -0.01:
-            if len_data <= 6:
+            if len_data <= 13:
                 self.init_ML(block_id, data)
             dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
             #print('feasible Point')
             #print(feasible_point)
-            if len_data > 8:
-                self.test_ML(block_id, data, 7)
+            if len_data > 15:
+                self.test_ML(block_id, data)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
@@ -995,5 +995,5 @@ class RefactoryColGen:
     def init_ML(self, block_id, training_data):
         return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data)
 
-    def test_ML(self, block_id, training_data, len_data):
-        return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data, len_data)
+    def test_ML(self, block_id, training_data):
+        return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data)

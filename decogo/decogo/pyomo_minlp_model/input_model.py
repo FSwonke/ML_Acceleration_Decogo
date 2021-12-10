@@ -987,12 +987,12 @@ class PyomoSubProblems(SubProblemsBase):
         """
         return self.surrogate_model.init_train(block_id, training_data)
 
-    def ml_sub_solver_test_init_train(self, block_id, training_data, len_data):
+    def ml_sub_solver_test_init_train(self, block_id, training_data):
         """ tests the surrogate model, predicts feasible points from directions
         :param: block_id
         :type: int
         :param: direction
         :type: ndarray
         """
-        return self.surrogate_model.test_init_train(block_id, training_data, len_data)
+        return self.surrogate_model.test_init_train(block_id, training_data)
 

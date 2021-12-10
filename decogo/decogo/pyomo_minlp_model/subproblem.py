@@ -479,6 +479,7 @@ class SurrogateModel:
         self.clf_batch = {}
         self.binary_index = binary_index
         self.scaler = {}
+        self.test_split = 0.1
 
     def init_train(self, block_id, training_data):
         '''Method for initial training of the Surrogate Model
@@ -490,40 +491,25 @@ class SurrogateModel:
         print('============================================ ')
         print('             initiated training              ')
         print('============================================ ')
-        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(100, 100),
-                                                 activation='relu',
-                                                 max_iter=1000,
+        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(200, 200),
+                                                 activation='tanh',
+                                                 max_iter=3000,
                                                  alpha=1e-5,
                                                  verbose = False)
-        '''
-        #list of binary indexes for a given block
-        index = self.binary_index[block_id]
 
 
-        blockdata = training_data[block_id]
-        y = np.zeros((len(blockdata), len(index)))
-        X = np.zeros((len(blockdata), len(blockdata[0][0])))
-        for i in range(len(blockdata)):
-            j = 0
-            for idx in index:
-                y[i, j] = round(blockdata[i][1][idx])
-                j += 1
-            for k in range(len(blockdata[0][0])):
-                X[i, k] = blockdata[i][0][k]
-
-        '''
         #split training_data into input/output
         X_train, y_train = self.split_data(block_id, training_data)
         #scale data (standardize)
         self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
         X_scaled = self.scaler[block_id].transform(X_train)
 
-        print('fit model to block:',block_id)
+        print('fit model to block:', block_id)
         print('y_train (output)')
         print(y_train)
         self.clf_batch[block_id].fit(X_scaled, y_train)
 
-    def predict(self, block_id, X,y):
+    def predict(self, block_id, X, y):
         '''Method for prediction of feasible points with Surrogate MOdel
         :param:
         :type:
@@ -538,11 +524,11 @@ class SurrogateModel:
         # inverse transform
         #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
         #score returns mean accuracy of the model
-        score = self.clf_batch[block_id].score(X,y)
+        score = self.clf_batch[block_id].score(X, y)
 
         return prediction, score
 
-    def test_init_train(self, block_id, training_data, len_data):
+    def test_init_train(self, block_id, training_data):
         '''
         :param: block_id
         :type: int
@@ -554,9 +540,10 @@ class SurrogateModel:
         :rtype: list
         '''
         print('============================================ ')
-        print('             initiated testing               ')
+        print('    initiated testing block', block_id,'     ')
         print('============================================ ')
-        X_test, y_test = self.split_data(block_id, training_data, len_data)
+        test = True
+        X_test, y_test = self.split_data(block_id, training_data, test)
         index = self.binary_index[block_id]
         #point = np.take(feasible_point, index)
 
@@ -573,7 +560,7 @@ class SurrogateModel:
 
         return prediction
 
-    def split_data(self, block_id, training_data, len_data = 0):
+    def split_data(self, block_id, training_data, test = False):
         """
         :param:
         """
@@ -582,14 +569,25 @@ class SurrogateModel:
 
 
         blockdata = training_data[block_id]
-        y = np.zeros((len(blockdata)-len_data, len(index)))
-        X = np.zeros((len(blockdata)-len_data, len(blockdata[0][0])))
-        for i in range(0, len(blockdata)-len_data):
+        y = np.zeros((len(blockdata), len(index)))
+        X = np.zeros((len(blockdata), len(blockdata[0][0])))
+
+        n_test = round(self.test_split*X.shape[0])
+        n_train = X.shape[0]-n_test
+        for i in range(0, len(blockdata)):
             j = 0
             for idx in index:
                 y[i, j] = round(blockdata[i][1][idx])
                 j += 1
             for k in range(len(blockdata[0][0])):
                 X[i, k] = blockdata[i][0][k]
+
+        if test == False:
+            X = X[0:n_train, :]
+            y = y[0:n_train, :]
+        elif test == True:
+            X = X[n_train:X.shape[0], :]
+            y = y[n_train:y.shape[0], :]
+
 
         return X, y
