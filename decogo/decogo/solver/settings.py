@@ -96,6 +96,9 @@ _setting_names_default_val = \
      'max_iter_standard_cg': 5,  # maximum iteration number for
      # fast cg for active blocks
 
+     # ml-based acceleration
+     'exact_solve_data': False,  # enable sub_problem data with exact solver
+     # if true
 
      }
 
