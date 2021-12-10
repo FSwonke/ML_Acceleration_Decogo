@@ -45,7 +45,13 @@ class RefactoryColGen:
             # in IA master problem
             i_find_sol += 1
             tic = time.time()
-            self.column_generation(approx_solver=True)  # solve subproblems
+
+            # option to generate sub-problem data with exact solver
+            if self.settings.exact_solve_data is False:
+                self.column_generation(approx_solver=True)  # solve sub-problems
+                # approximately
+            else:
+                self.column_generation()  # solve sub-problems exactly
             # approximately
             time_cg = round(time.time() - tic, 2)
             logger.info('Time used for init CG '
