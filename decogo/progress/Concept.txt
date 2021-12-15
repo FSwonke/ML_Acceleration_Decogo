@@ -73,7 +73,7 @@ Describe
             block_ids
             scaling_parameters: dict, elemen: mean, var 
             binary_index: dict, elemen: list of binary index in a block
-
+            split_test = 0.2 #uses 20% of accumlated data for validation
         Methods:
             def __init__(block_ids, binary_index) todo
                 
@@ -92,8 +92,7 @@ Describe
                 # data from SubSolverData
 
                 # read/split input and output data
-                    x, y
-                    y = training_data[:, binary_index[block_id]]
+                # uses split_data
                 # preprocess input data -> scaled input output data
                     Sklearn.Preprocessing -> StandardScaler
                     self.scaler[block_id].transform(X)
@@ -117,6 +116,7 @@ Describe
      
             def test_init_train(validation_data, block_id)      
                 # predict with SurrogateModel
+                # uses split_data method
                 # 10th iteration -> enough data to call init_train
                 # 15th iteration -> new data generated as validation_data
                 # test with more/less data to see if SurrogateModel is working
@@ -131,14 +131,20 @@ Describe
 
             def update_model_specifications()     
 
-            def split_data(block_id, training_data, len_data = 0)
-                # splits training data (dictionary) into input/output - arrays
+            def split_data(block_id, training_data, test = False)
+                # splits training/test data (dictionary) into input/output - arrays
                 # param: X; nd array (n_samples, n_features)
                 # param: y; nd array (n_samples, n_outputs)
-                # len_data refers to the number of corresponding directions & points
-                # -> if != 0, determines how training data ist split into train/test data 
+                # 
+                # -> if test = false: no split between training and validation data happens
+                # -> if test = true: data is splitted in 80% training and 20% validation
                 
-                returns X, y           
+                returns X, y   
+
+            def ml_sub_solve(block_id, direction)
+                # reads direction from master problem
+                # transfrom into orig space
+                # makes prediction        
 
 
 
@@ -245,7 +251,7 @@ Devide the concept into activities.
                 how to pass in training_data
                 training the surrogate model for some iterations
                 testing the Surrogate_model after some iterations
-                
+
 7 plan & milestones: (2 days per week)
 -----------------------------------------------------------
 

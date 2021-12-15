@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     with open('decogo.set', 'w') as file:
         file.write('strategy = CG\n')
-        file.write('maxtime = 3600\n')  # 1 hours
+        file.write('maxtime = 1000\n')  # 1 hours
         file.write('cg_max_iter = 5\n')
         file.write('cg_sub_gradient_max_iter = 3\n')
         file.write('decomp_estimate_var_bounds = False\n')

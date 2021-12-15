@@ -492,10 +492,11 @@ class SurrogateModel:
         print('             initiated training              ')
         print('============================================ ')
         self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(200, 200),
-                                                 activation='tanh',
-                                                 max_iter=3000,
+                                                 activation='relu',
+                                                 max_iter=10000,
                                                  alpha=1e-5,
-                                                 verbose = False)
+                                                 verbose = False,
+                                                 solver = 'lbfgs')
 
 
         #split training_data into input/output
@@ -506,10 +507,12 @@ class SurrogateModel:
 
         print('fit model to block:', block_id)
         print('y_train (output)')
-        print(y_train)
+        #print(y_train)
+        print('shape training data')
+        print(y_train.shape)
         self.clf_batch[block_id].fit(X_scaled, y_train)
 
-    def predict(self, block_id, X, y):
+    def predict(self, block_id, X, y = None):
         '''Method for prediction of feasible points with Surrogate MOdel
         :param:
         :type:
@@ -524,9 +527,12 @@ class SurrogateModel:
         # inverse transform
         #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
         #score returns mean accuracy of the model
-        score = self.clf_batch[block_id].score(X, y)
 
-        return prediction, score
+
+
+        #score = self.clf_batch[block_id].score(X, y)
+
+        return prediction
 
     def test_init_train(self, block_id, training_data):
         '''
@@ -547,18 +553,19 @@ class SurrogateModel:
         index = self.binary_index[block_id]
         #point = np.take(feasible_point, index)
 
-        #print('block_id',block_id)
-        #print('direction (input): ', direction)
 
-        prediction, score = self.predict(block_id, X_test, y_test)
-        print('y_test (validation)')
-        print(y_test)
-        print('Prediction')
-        print(prediction)
-        print('score')
-        print(score)
 
-        return prediction
+        prediction = self.predict(block_id, X_test, y_test)
+        print('shape y_test')
+        print(y_test.shape)
+        #print('y_test (validation)')
+        #print(y_test)
+        #print('Prediction')
+        #print(prediction)
+        #print('score')
+        #print(score)
+
+        return prediction, y_test
 
     def split_data(self, block_id, training_data, test = False):
         """
@@ -591,3 +598,22 @@ class SurrogateModel:
 
 
         return X, y
+
+    def sub_solve(self, block_id, direction, point):
+        print('============================================ ')
+        print('    sub solve block', block_id, '            ')
+        print('============================================ ')
+        #print('reduced cost direction:')
+        #print(direction)
+        index = self.binary_index[block_id]
+        p = np.zeros((1, len(index)))
+        i = 0
+        for idx in index:
+            p[0, i] = round(point[idx])
+            i += 1
+        print('feasible point from Global Subsolver')
+        print(p)
+        print('prediction:')
+        prediction = self.predict(block_id, np.array([direction]))
+        print(prediction)
+        return prediction, p

@@ -6,6 +6,7 @@ import math
 import time
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from decogo.solver.settings import Settings
 from decogo.util.block_vector import BlockVector
@@ -139,7 +140,9 @@ class RefactoryColGen:
         time_i_loop_set = []
 
         while True:
-
+            print('=====================================================')
+            print('                 main iteration                      ')
+            print('=====================================================')
             self.result.main_iterations += 1
             print('iteration',self.result.main_iterations)
 
@@ -148,6 +151,7 @@ class RefactoryColGen:
             num_subproblems_solved = self.result.cg_num_minlp_problems
 
             tic = time.time()
+            print('Column Generation')
             self.column_generation(hat_k_set)
             time_column_generation = round(time.time() - tic, 2)
             logger.info('CG relaxation obj. value in iter {0}: {1}'
@@ -194,6 +198,7 @@ class RefactoryColGen:
             logger.info('CG regarding all blocks')
             # col/cut generation for all blocks; calculate reduced cost
             tic = time.time()
+            print('SolverInnerLP')
             z, x_ia, w_ia, slacks, duals, obj_value_ia = \
                 self.problem.master_problems.solve_ia(self.settings.lp_solver)
 
@@ -201,11 +206,24 @@ class RefactoryColGen:
 
             # reduce block set based on the reduced cost
             hat_k_set = []
+            point_list = {}
+            pred_list = {}
             for k in range(self.problem.block_model.num_blocks):
+                point_list[k] = []
+                pred_list[k] = []
                 if self.problem.block_model.sub_models[k].linear is False:
-                    _, _, delta_k, new_point, _ = \
+                    fpoint, _, delta_k, new_point, _, training_data, len_data = \
                         self.generate_column(k, reduced_cost_direction)
-
+                    if self.result.main_iterations == 1:
+                        self.init_ML(k, training_data)
+                    if self.result.main_iterations >= 2:
+                        pred, y_test = self.test_ML(k, training_data)
+                        dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
+                        pred, glob_point = self.ml_sub_solve(k, dir, fpoint)
+                        point_list[k].append(glob_point[0])
+                        pred_list[k].append(pred[0])
+                        #print('feasbile point from subsolver')
+                        #print(fpoint)
                     if delta_k <= -1e-3:
                         hat_k_set.append(k)
 
@@ -238,11 +256,21 @@ class RefactoryColGen:
                             # until optimality not clear whether it will slow
                             # down everything too much maybe here is better
                             # to use just stricter settings for SCIP
-                            _, _, delta_k, new_point, _ = \
+                            fpoint, _, delta_k, new_point, _, training_data, len_data = \
                                 self.generate_column(k,
                                                      reduced_cost_direction,
                                                      heuristic=False)
+                            if self.result.main_iterations == 1:
+                                self.init_ML(k, training_data)
+                            if self.result.main_iterations >= 2:
+                                pred, y_test = self.test_ML(k, training_data)
+                                dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
 
+                                pred, glob_point = self.ml_sub_solve(k, dir, fpoint)
+                                point_list[k].append(glob_point[0])
+                                pred_list[k].append(pred[0])
+                                #print('feasbile point from subsolver')
+                                #print(fpoint)
                             if delta_k <= -1e-3:
                                 hat_k_set.append(k)
 
@@ -250,7 +278,16 @@ class RefactoryColGen:
                         stop_by_cg_converg = True
                 else:
                     stop_by_cg_converg = True
-
+            point_array = {}
+            pred_array = {}
+            for k in range(self.problem.block_model.num_blocks):
+                point_array[k] = np.array(point_list[k])
+                pred_array[k] = np.array(pred_list[k])
+                print('Block:',k)
+                print('point array')
+                print(point_array[k])
+                print('pred_array')
+                print(pred_array[k])
             # primal heuristics
             if self.settings.cg_find_solution:
                 tic = time.time()
@@ -299,6 +336,7 @@ class RefactoryColGen:
 
         self.result.sub_problem_number_after_cg = \
             self.result.total_sub_problem_number
+
 
     def ia_init(self, duals=None):
         """Initialization of inner outer approximation
@@ -391,7 +429,7 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
-                _, _, reduced_cost_list[k], new_point, _ = \
+                _, _, reduced_cost_list[k], new_point, _, _, _ = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
                                          x_k=x_ia.get_block(k))
@@ -414,7 +452,7 @@ class RefactoryColGen:
                     slack_direction = self.get_slack_directions(slacks)
                     for k in blocks:
                         tic = time.time()
-                        _, _, _, new_point, _ = \
+                        _, _, _, new_point, _, _, _ = \
                             self.generate_column(k, slack_direction,
                                                  approx_solver=approx_solver,
                                                  x_k=x_ia.get_block(k))
@@ -534,7 +572,7 @@ class RefactoryColGen:
                         self.local_solve_subproblem(
                             k, direction, x_k=x_ia.get_block(k))
                 else:
-                    _, _, reduced_cost_list[k], new_point, r_k = \
+                    _, _, reduced_cost_list[k], new_point, r_k, _, _ = \
                         self.generate_column(k, direction)
                 generate_column_time_list[k] = round(time.time() - tic,
                                                      2)
@@ -692,7 +730,7 @@ class RefactoryColGen:
             direction = np.concatenate(([1], direction_vector))
             for k in range(self.problem.block_model.num_blocks):
                 tic = time.time()
-                feasible_point, primal_bound, reduced_cost, new_point, _ = \
+                feasible_point, primal_bound, reduced_cost, new_point, _, _, _ = \
                     self.generate_column(k, direction)
                 time_generate_column_sub_gradient_list[k] = round(
                     time.time() - tic, 2)
@@ -779,16 +817,16 @@ class RefactoryColGen:
                 #print('data', data)
         reduced_cost = round(reduced_cost, 3)
 
-        if not approx_solver and reduced_cost > -0.01:
-            if len_data <= 13:
-                self.init_ML(block_id, data)
-            dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
+        #if not approx_solver and reduced_cost > -0.01:
+            #if len_data <= 13:
+                #self.init_ML(block_id, data)
+            #dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
             #print('feasible Point')
             #print(feasible_point)
-            if len_data > 15:
-                self.test_ML(block_id, data)
+            #if len_data > 15:
+                #self.test_ML(block_id, data)
 
-        return feasible_point, primal_bound, reduced_cost, is_new_point, column
+        return feasible_point, primal_bound, reduced_cost, is_new_point, column, data, len_data
 
     def global_solve_subproblem(self, block_id,
                                 dir_im_space,
@@ -1003,3 +1041,6 @@ class RefactoryColGen:
 
     def test_ML(self, block_id, training_data):
         return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data)
+
+    def ml_sub_solve(self, block_id, direction, point):
+        return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point)

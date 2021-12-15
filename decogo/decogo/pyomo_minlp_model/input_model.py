@@ -996,3 +996,9 @@ class PyomoSubProblems(SubProblemsBase):
         """
         return self.surrogate_model.test_init_train(block_id, training_data)
 
+    def ml_sub_solver(self, block_id, direction, point):
+        '''
+        :param
+        :type:
+        '''
+        return self.surrogate_model.sub_solve(block_id, direction, point)
