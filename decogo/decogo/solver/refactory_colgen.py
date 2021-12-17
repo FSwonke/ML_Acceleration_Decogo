@@ -7,6 +7,7 @@ import time
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from decogo.solver.settings import Settings
 from decogo.util.block_vector import BlockVector
@@ -31,6 +32,7 @@ class RefactoryColGen:
         self.problem = problem
         self.result = result
         self.settings = settings
+        self.tdata = {}
 
     def solve(self):
         """
@@ -144,8 +146,9 @@ class RefactoryColGen:
             print('                 main iteration                      ')
             print('=====================================================')
             self.result.main_iterations += 1
-            print('iteration',self.result.main_iterations)
-
+            print('iteration', self.result.main_iterations)
+            print('=====================Plotting====================')
+            self.plot_train_data(1, self.tdata)
             tic_i_start = time.time()
 
             num_subproblems_solved = self.result.cg_num_minlp_problems
@@ -214,9 +217,9 @@ class RefactoryColGen:
                 if self.problem.block_model.sub_models[k].linear is False:
                     fpoint, _, delta_k, new_point, _, training_data, len_data = \
                         self.generate_column(k, reduced_cost_direction)
-                    if self.result.main_iterations == 1:
+                    if self.result.main_iterations == 2:
                         self.init_ML(k, training_data)
-                    if self.result.main_iterations >= 2:
+                    if self.result.main_iterations >= 3:
                         pred, y_test = self.test_ML(k, training_data)
                         dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
                         pred, glob_point = self.ml_sub_solve(k, dir, fpoint)
@@ -226,6 +229,7 @@ class RefactoryColGen:
                         #print(fpoint)
                     if delta_k <= -1e-3:
                         hat_k_set.append(k)
+
 
             time_column_generation = round(time.time() - tic, 2)
             logger.info('Time used for CG for all blocks: --{0}-- seconds'
@@ -260,9 +264,9 @@ class RefactoryColGen:
                                 self.generate_column(k,
                                                      reduced_cost_direction,
                                                      heuristic=False)
-                            if self.result.main_iterations == 1:
+                            if self.result.main_iterations == 2:
                                 self.init_ML(k, training_data)
-                            if self.result.main_iterations >= 2:
+                            if self.result.main_iterations >= 3:
                                 pred, y_test = self.test_ML(k, training_data)
                                 dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
 
@@ -336,7 +340,6 @@ class RefactoryColGen:
 
         self.result.sub_problem_number_after_cg = \
             self.result.total_sub_problem_number
-
 
     def ia_init(self, duals=None):
         """Initialization of inner outer approximation
@@ -421,6 +424,10 @@ class RefactoryColGen:
                                 max_slack_value, sum_slack_values))
 
             reduced_cost_direction = np.concatenate(([1], duals))
+            #print('=============INFO==================================')
+            #print('dict training data self.tdata:')
+            #print(self.tdata)
+            #if i == 4:
 
             # generate new columns
             generate_column_time_list = {}
@@ -813,18 +820,8 @@ class RefactoryColGen:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
                  column, data, len_data = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
-                #logger.info('Training Data generated: {0}; In Block {1}'.format(len(data), block_id))
-                #print('data', data)
-        reduced_cost = round(reduced_cost, 3)
 
-        #if not approx_solver and reduced_cost > -0.01:
-            #if len_data <= 13:
-                #self.init_ML(block_id, data)
-            #dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, direction)
-            #print('feasible Point')
-            #print(feasible_point)
-            #if len_data > 15:
-                #self.test_ML(block_id, data)
+        reduced_cost = round(reduced_cost, 3)
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column, data, len_data
 
@@ -867,12 +864,13 @@ class RefactoryColGen:
         feasible_point, primal_bound, dual_bound, _ = \
             self.problem.sub_problems[block_id].global_solve(
                 direction=dir_orig_space, result=self.result)
-        #print('feasible Point', feasible_point)
+
         #store data for the ML-Model
         data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
+        self.tdata = data
         #check, if get_size_training_data method works
         len_data = self.problem.get_size_training_data(block_id)
-        print('ldata',len_data, 'block_id',block_id)
+        print('length data: ',len_data, 'in block:',block_id)
 
         column = None
         if compute_reduced_cost is True:
@@ -1044,3 +1042,37 @@ class RefactoryColGen:
 
     def ml_sub_solve(self, block_id, direction, point):
         return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point)
+
+    def plot_train_data(self, block_id, training_data):
+        """method for printing data (inputs & outputs)
+        :param:
+        """
+        test = False
+        for k in range(self.problem.block_model.num_blocks):
+            X, y = self.problem.sub_problems[k].split_data(k, training_data, test)
+            Xy = np.concatenate((X, y), axis = 1)
+            #ax = sns.heatmap(Xy)
+            #plt.savefig('Block'+str(k)+'_Heatmap')
+            linspace = np.linspace(0, X.shape[0], X.shape[0])
+            for i in range(X.shape[1]):
+                fig1, ax1 = plt.subplots(1, 1)
+                ax1.scatter(linspace, X[:, i], label='d['+str(i)+']')
+                ax1.plot(linspace, X[:, i], 'r--')
+                plt.grid()
+                plt.title('Block '+str(k))
+                ax1.set_xlabel('iterations')
+                ax1.set_ylabel('d['+str(i)+']')
+
+                plt.savefig('Block'+str(k)+'Direction_comp'+str(i))
+
+                #plt.show()
+            for j in range(y.shape[1]):
+                fig2, ax1 = plt.subplots(1, 1)
+                ax1.scatter(linspace, y[:, j],  label='y['+str(j)+']')
+                ax1.plot(linspace, y[:, j], 'g--')
+                plt.grid()
+                plt.title('Block ' + str(k))
+                plt.xlabel('iterations')
+                plt.ylabel('y['+str(j)+']')
+                plt.savefig('Block'+str(k)+'Points_bin' + str(j))
+                #plt.show()

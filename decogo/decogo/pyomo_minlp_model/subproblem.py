@@ -509,6 +509,9 @@ class SurrogateModel:
         print('y_train (output)')
         #print(y_train)
         print('shape training data')
+        print('X')
+        print(X_train.shape)
+        print('y')
         print(y_train.shape)
         self.clf_batch[block_id].fit(X_scaled, y_train)
 

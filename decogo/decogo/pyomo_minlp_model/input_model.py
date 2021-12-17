@@ -1002,3 +1002,7 @@ class PyomoSubProblems(SubProblemsBase):
         :type:
         '''
         return self.surrogate_model.sub_solve(block_id, direction, point)
+
+    def split_data(self, block_id, training_data, test = False):
+
+        return self.surrogate_model.split_data(block_id, training_data, test)
