@@ -537,8 +537,8 @@ class SurrogateModel:
         # transform input
         transformed_direction = self.scaler[block_id].transform(X)
         # predict method
-        prediction = self.clf_batch[block_id].predict(transformed_direction)
-
+        pred = self.clf_batch[block_id].predict(transformed_direction)
+        prediction = np.around(pred)
         # inverse transform
         #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
         #score returns mean accuracy of the model
