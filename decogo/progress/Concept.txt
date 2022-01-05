@@ -251,6 +251,7 @@ Devide the concept into activities.
                 how to pass in training_data
                 training the surrogate model for some iterations
                 testing the Surrogate_model after some iterations
+12.01.2022      more advanced graphics -> display from what phase training data comes (ia_init, approx_colgen, fwcolgen)
 
 7 plan & milestones: (2 days per week)
 -----------------------------------------------------------
