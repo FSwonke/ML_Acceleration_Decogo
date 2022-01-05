@@ -12,6 +12,8 @@ from pyomo.environ import Binary, Integers, Reals, SolverStatus, \
 from pyomo.opt import SolverFactory
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.models import Sequential
 
 logger = logging.getLogger('decogo')
 
@@ -493,16 +495,24 @@ class SurrogateModel:
         print('============================================ ')
         print('             initiated training              ')
         print('============================================ ')
-        self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(200, 200),
-                                                 activation='relu',
-                                                 max_iter=10000,
-                                                 alpha=1e-5,
-                                                 verbose = False,
-                                                 solver = 'lbfgs')
-
-
-        #split training_data into input/output
+        #self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(200, 200),
+                                                 #activation='relu',
+                                                 #max_iter=10000,
+                                                 #alpha=1e-5,
+                                                 #verbose = False,
+                                                 #solver = 'lbfgs')
+        # split training_data into input/output
         X_train, y_train = self.split_data(block_id, training_data)
+
+        self.clf_batch[block_id] = Sequential()
+        # self.clf_batch[block_id].add(Input(shape=(X.shape[1],),))
+        self.clf_batch[block_id].add(Dense(X_train.shape[1], input_dim=X_train.shape[1]))
+        self.clf_batch[block_id].add(Dense(50, activation='tanh'))
+        self.clf_batch[block_id].add(Dense(50, activation='softsign'))
+        self.clf_batch[block_id].add(Dense(y_train.shape[1], activation='sigmoid'))
+        self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adadelta')
+
+
         #scale data (standardize)
         self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
         X_scaled = self.scaler[block_id].transform(X_train)
@@ -515,7 +525,7 @@ class SurrogateModel:
         print(X_train.shape)
         print('y')
         print(y_train.shape)
-        self.clf_batch[block_id].fit(X_scaled, y_train)
+        self.clf_batch[block_id].fit(X_scaled, y_train, epochs=500, verbose=0)
 
     def predict(self, block_id, X, y = None):
         '''Method for prediction of feasible points with Surrogate MOdel
