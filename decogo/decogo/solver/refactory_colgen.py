@@ -8,6 +8,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 from decogo.solver.settings import Settings
 from decogo.util.block_vector import BlockVector
@@ -222,9 +223,8 @@ class RefactoryColGen:
                     if self.result.main_iterations >= 3:
                         pred, y_test = self.test_ML(k, training_data)
                         dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
-                        pred, glob_point = self.ml_sub_solve(k, dir, fpoint)
-                        point_list[k].append(glob_point[0])
-                        pred_list[k].append(pred[0])
+                        pred, glob_point = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
+
                         #print('feasbile point from subsolver')
                         #print(fpoint)
                     if delta_k <= -1e-3:
@@ -270,9 +270,8 @@ class RefactoryColGen:
                                 pred, y_test = self.test_ML(k, training_data)
                                 dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
 
-                                pred, glob_point = self.ml_sub_solve(k, dir, fpoint)
-                                point_list[k].append(glob_point[0])
-                                pred_list[k].append(pred[0])
+                                pred, glob_point = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
+
                                 #print('feasbile point from subsolver')
                                 #print(fpoint)
                             if delta_k <= -1e-3:
@@ -282,16 +281,7 @@ class RefactoryColGen:
                         stop_by_cg_converg = True
                 else:
                     stop_by_cg_converg = True
-            point_array = {}
-            pred_array = {}
-            for k in range(self.problem.block_model.num_blocks):
-                point_array[k] = np.array(point_list[k])
-                pred_array[k] = np.array(pred_list[k])
-                print('Block:',k)
-                print('point array')
-                print(point_array[k])
-                print('pred_array')
-                print(pred_array[k])
+
             # primal heuristics
             if self.settings.cg_find_solution:
                 tic = time.time()
@@ -402,6 +392,9 @@ class RefactoryColGen:
 
             z, x_ia, w_ia, slacks, duals, obj_value_ia = \
                 self.problem.master_problems.solve_ia(self.settings.lp_solver)
+            print('=======x_ia========')
+            print(type(x_ia[0, :]))
+            print(x_ia[0, :])
             self.result.cg_relaxation = obj_value_ia
             if i == 0:
                 initial_obj_value_ia = obj_value_ia
@@ -1040,8 +1033,8 @@ class RefactoryColGen:
     def test_ML(self, block_id, training_data):
         return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data)
 
-    def ml_sub_solve(self, block_id, direction, point):
-        return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point)
+    def ml_sub_solve(self, block_id, direction, point, x_ia, result):
+        return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point, x_ia, result)
 
     def plot_train_data(self, block_id, training_data):
         """method for printing data (inputs & outputs)
@@ -1050,10 +1043,28 @@ class RefactoryColGen:
         test = False
         for k in range(self.problem.block_model.num_blocks):
             X, y = self.problem.sub_problems[k].split_data(k, training_data, test)
-            Xy = np.concatenate((X, y), axis = 1)
-            #ax = sns.heatmap(Xy)
-            #plt.savefig('Block'+str(k)+'_Heatmap')
+            X_list = []
+            i = 0
+            for i in range(X.shape[1]):
+                X_list.append('d['+str(i)+']')
+                i += 1
+            y_list = []
+            i = 0
+            for i in range(y.shape[1]):
+                y_list.append('y['+str(i)+']')
+                i += 1
+            label = X_list+y_list #X_list.extend(y_list)
+            Xy = np.concatenate((X, y), axis=1)
+            df = pd.DataFrame(Xy, columns=label)
+            dfcorr = df.corr()
+            print('correlation matrix')
+            print(dfcorr)
+            plt.figure(figsize=(12, 8))
+            ax = sns.heatmap(dfcorr)
+            ax.set_title('Block'+str(k))
+            plt.savefig('Block'+str(k)+'_Heatmap')
             linspace = np.linspace(0, X.shape[0], X.shape[0])
+            i = 0
             for i in range(X.shape[1]):
                 fig1, ax1 = plt.subplots(1, 1)
                 ax1.scatter(linspace, X[:, i], label='d['+str(i)+']')

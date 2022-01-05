@@ -996,13 +996,29 @@ class PyomoSubProblems(SubProblemsBase):
         """
         return self.surrogate_model.test_init_train(block_id, training_data)
 
-    def ml_sub_solver(self, block_id, direction, point):
+    def ml_sub_solver(self, block_id, direction, point, x_ia, result):
         '''
-        :param
+        :param:
         :type:
+        :return: prediction, p_int
+        :rtype:
         '''
-        return self.surrogate_model.sub_solve(block_id, direction, point)
+        #prediction (ndarray), is primal solution to LP-IA Masterproblem, including the predicted binaries from Surrogate model
+        prediction, p_int, x_sg, point = self.surrogate_model.sub_solve(block_id, direction, point, x_ia)
+        print('=====================================================')
+        print('     Starting NLP with predicted binaries            ')
+        print('=====================================================')
+        tilde_y, new_point_obj_val, dual_bound, sol_is_feasible = self.local_solve(result, direction, start_point=x_sg.flatten())
+        print('tilde_y')
+        print(tilde_y)
+        print('point')
+        print(point)
+        print('new_point_obj_val')
+        print(new_point_obj_val)
+        print('dual bound')
+        print(dual_bound)
+        return prediction, p_int
 
-    def split_data(self, block_id, training_data, test = False):
+    def split_data(self, block_id, training_data, test=False):
 
         return self.surrogate_model.split_data(block_id, training_data, test)

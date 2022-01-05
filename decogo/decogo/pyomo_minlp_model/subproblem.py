@@ -100,6 +100,8 @@ class PyomoSubProblemBase(ABC):
         """
 
         if start_point is not None:
+            print('start_point')
+            print(start_point)
             for i in range(len(self.model.Y)):
                 self.model.Y[i + 1].value = start_point[i]
 
@@ -602,21 +604,52 @@ class SurrogateModel:
 
         return X, y
 
-    def sub_solve(self, block_id, direction, point):
+    def sub_solve(self, block_id, direction, point, x_ia):
+        """ takes direction to predict binaries; takes point from for comparing prediction & solution
+        :param: block_id
+        :type: int
+        :param: direction
+        :type: nd array
+        :param: point; feasible point from global subsolver (for comparison)
+        :type: nd array
+        :param: x_ia ; primal solution from LP-IA Masterproblem, includes continuous variables, starting point for NLP-solver
+        :type: nd array
+        """
         print('============================================ ')
         print('    sub solve block', block_id, '            ')
         print('============================================ ')
-        #print('reduced cost direction:')
-        #print(direction)
+
+
+
         index = self.binary_index[block_id]
+        print('list of binaries in block', block_id)
+        print(index)
+        x = x_ia[block_id, :]
+        print('============')
+        print('     x      ')
+        print('shape: ', x.shape, 'type:', type(x))
+        print(x)
         p = np.zeros((1, len(index)))
         i = 0
         for idx in index:
+            #x[idx] = round()
             p[0, i] = round(point[idx])
             i += 1
+
         print('feasible point from Global Subsolver')
         print(p)
+
         print('prediction:')
-        prediction = self.predict(block_id, np.array([direction]))
-        print(prediction)
-        return prediction, p
+        pred = self.predict(block_id, np.array([direction]))
+        print(pred)
+        prediction = pred.flatten()
+        # build complete vector (point) with continuous variables from nlp solver and binaries from surrogate model
+        j = 0
+        for idx in index:
+            x[idx] = prediction[j]
+            j += 1
+        print('===========x_ia====block'+str(block_id)+'=====')
+        print(x_ia[block_id, :])
+        print('==============x==========')
+        print(x)
+        return prediction, p, x, point
