@@ -582,7 +582,7 @@ class SurrogateModel:
 
         return prediction, y_test
 
-    def split_data(self, block_id, training_data, test = False):
+    def split_data(self, block_id, training_data, test=False):
         """
         :param:
         """
@@ -593,9 +593,11 @@ class SurrogateModel:
         blockdata = training_data[block_id]
         y = np.zeros((len(blockdata), len(index)))
         X = np.zeros((len(blockdata), len(blockdata[0][0])))
-
-        n_test = round(self.test_split*X.shape[0])
-        n_train = X.shape[0]-n_test
+        if test == True:
+            n_test = round(self.test_split*X.shape[0])
+            n_train = X.shape[0]-n_test
+        else:
+            n_train = X.shape[0]
         for i in range(0, len(blockdata)):
             j = 0
             for idx in index:

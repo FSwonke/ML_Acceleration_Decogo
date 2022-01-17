@@ -33,7 +33,13 @@ class RefactoryColGen:
         self.problem = problem
         self.result = result
         self.settings = settings
+
         self.tdata = {}
+        self.phase_list = {}
+        #initiation of lists for phase list
+        for k in range(self.problem.block_model.num_blocks):
+            self.phase_list[k] = []
+        self.ndata = {}
 
     def solve(self):
         """
@@ -41,6 +47,12 @@ class RefactoryColGen:
         """
 
         self.ia_init()
+        print('=======================')
+        print('IA_init done')
+        print('=======================')
+        for k_phase in range(self.problem.block_model.num_blocks):
+            self.phase_list[k_phase].append(self.ndata[k_phase])
+        k_phase = 0
 
         # initial column generation
         tic_init_cg = time.time()
@@ -57,6 +69,13 @@ class RefactoryColGen:
             else:
                 self.column_generation()  # solve sub-problems exactly
             # approximately
+
+            print('=======================')
+            print('Approx Colgen done')
+            print('=======================')
+            for k_phase in range(self.problem.block_model.num_blocks):
+                self.phase_list[k_phase].append(self.ndata[k_phase])
+            k_phase = 0
             time_cg = round(time.time() - tic, 2)
             logger.info('Time used for init CG '
                         'in iter {0}: --{1}-- seconds'
@@ -116,6 +135,9 @@ class RefactoryColGen:
                 '-----------------------------------------------------')
             if j == 5:
                 break
+        for k_phase in range(self.problem.block_model.num_blocks):
+            self.phase_list[k_phase].append(self.ndata[k_phase])
+        k_phase = 0
 
         time_init_cg = round(time.time() - tic_init_cg, 2)
         logger.info('\nCG relaxation obj. value '
@@ -141,7 +163,10 @@ class RefactoryColGen:
                      is False}
 
         time_i_loop_set = []
-
+        print('====================================================')
+        print('phase_list')
+        print(self.phase_list)
+        print('====================================================')
         while True:
             print('=====================================================')
             print('                 main iteration                      ')
@@ -330,6 +355,10 @@ class RefactoryColGen:
 
         self.result.sub_problem_number_after_cg = \
             self.result.total_sub_problem_number
+        print('====================================================')
+        print('phase_list')
+        print(self.phase_list)
+        print('====================================================')
 
     def ia_init(self, duals=None):
         """Initialization of inner outer approximation
@@ -429,13 +458,14 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
-                _, _, reduced_cost_list[k], new_point, _, _, _ = \
+                _, _, reduced_cost_list[k], new_point, _, _, len_data = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
                                          x_k=x_ia.get_block(k))
                 generate_column_time_list[k] = round(time.time() - tic, 2)
                 if new_point is True:
                     new_columns_generated[k] += 1
+
 
             # generate columns according to non-zero slacks
             generate_column_slack_time_list = {}
@@ -864,6 +894,7 @@ class RefactoryColGen:
         #check, if get_size_training_data method works
         len_data = self.problem.get_size_training_data(block_id)
         print('length data: ',len_data, 'in block:',block_id)
+        self.ndata[block_id] = len_data
 
         column = None
         if compute_reduced_cost is True:
@@ -1041,6 +1072,7 @@ class RefactoryColGen:
         :param:
         """
         test = False
+
         for k in range(self.problem.block_model.num_blocks):
             X, y = self.problem.sub_problems[k].split_data(k, training_data, test)
             X_list = []
@@ -1064,12 +1096,34 @@ class RefactoryColGen:
             ax.set_title('Block'+str(k))
             plt.savefig('Block'+str(k)+'_Heatmap')
             linspace = np.linspace(0, X.shape[0], X.shape[0])
+            ia_init = np.linspace(0, self.phase_list[k][0]-1, self.phase_list[k][0], dtype=int)
+            appcolgen = np.linspace(self.phase_list[k][0], self.phase_list[k][1]-1, self.phase_list[k][1] - self.phase_list[k][0], dtype=int)
+            fwcolgen = np.linspace(self.phase_list[k][1], self.phase_list[k][2]-1, self.phase_list[k][2] - self.phase_list[k][1], dtype=int)
+
+            print('appcolgen', appcolgen.shape)
+            print('X 0-1 ', X[self.phase_list[k][0]:self.phase_list[k][1]+1,1].shape)
+            print('fwcolgen: ', fwcolgen.shape)
+            print(fwcolgen)
+            print('X 1-2: ', X[self.phase_list[k][1]:self.phase_list[k][2],1].shape)
+            print(X[self.phase_list[k][1]:self.phase_list[k][2],1])
+            print('xshape ',X.shape)
+            print('X:')
+            print(X)
             i = 0
             for i in range(X.shape[1]):
                 fig1, ax1 = plt.subplots(1, 1)
-                ax1.scatter(linspace, X[:, i], label='d['+str(i)+']')
-                ax1.plot(linspace, X[:, i], 'r--')
+                #ax1.scatter(linspace, X[:, i], label='d[' + str(i) + ']')
+                #ax1.plot(linspace, X[:, i], 'r--')
+                ax1.plot(ia_init, X[0:self.phase_list[k][0], i], 'r--')
+                ax1.scatter(ia_init, X[0:self.phase_list[k][0], i], color='green', label='ia_init')
+                ax1.plot(appcolgen, X[self.phase_list[k][0]:self.phase_list[k][1],i], 'r--')
+                ax1.scatter(appcolgen, X[self.phase_list[k][0]:self.phase_list[k][1], i], color='blue', label='approx colgen')
+                ax1.plot(fwcolgen, X[self.phase_list[k][1]:self.phase_list[k][2]+1, i], 'r--')
+                ax1.scatter(fwcolgen, X[self.phase_list[k][1]:self.phase_list[k][2]+1, i], color='red', label='fwcolgen')
+
+
                 plt.grid()
+                plt.legend()
                 plt.title('Block '+str(k))
                 ax1.set_xlabel('iterations')
                 ax1.set_ylabel('d['+str(i)+']')
@@ -1079,11 +1133,21 @@ class RefactoryColGen:
                 #plt.show()
             for j in range(y.shape[1]):
                 fig2, ax1 = plt.subplots(1, 1)
-                ax1.scatter(linspace, y[:, j],  label='y['+str(j)+']')
-                ax1.plot(linspace, y[:, j], 'g--')
+                #ax1.scatter(linspace, y[:, j],  label='y['+str(j)+']')
+                #ax1.plot(linspace, y[:, j], 'g--')
+                ax1.plot(ia_init, y[0:self.phase_list[k][0],j], 'g--')
+                ax1.scatter(ia_init, y[0:self.phase_list[k][0], j], color='green', label='ia_init')
+                ax1.plot(appcolgen, y[self.phase_list[k][0]:self.phase_list[k][1],j], 'g--')
+                ax1.scatter(appcolgen, y[self.phase_list[k][0]:self.phase_list[k][1], j], color='blue', label='approx colgen')
+                ax1.plot(fwcolgen, y[self.phase_list[k][1]:self.phase_list[k][2]+1,j], 'g--')
+                ax1.scatter(fwcolgen, y[self.phase_list[k][1]:self.phase_list[k][2]+1, j], color='red', label='fwcolgen')
+
+
                 plt.grid()
+                plt.legend()
                 plt.title('Block ' + str(k))
                 plt.xlabel('iterations')
                 plt.ylabel('y['+str(j)+']')
                 plt.savefig('Block'+str(k)+'Points_bin' + str(j))
                 #plt.show()
+

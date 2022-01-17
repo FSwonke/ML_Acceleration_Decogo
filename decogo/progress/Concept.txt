@@ -199,6 +199,67 @@ Describe
                 #evaulates if prediction made by the model is right/wrong
 
 - class design for applying anomaly detection
+class evaluator:
+
+    def __init__(self,):
+
+        pass
+
+    def chi2_test(self,direction, x, dof):
+        # takes tranformed direction t_n
+        # chi2 distribution from scipy.stats
+        # calc mean, variance of the direction
+        # np.mean(), np.var()
+        # determine the test statistic for a t test (y_score) 
+        # stats.chi2.cdf(y_score, df) 'returns probability for a given test statistic
+        # compute y_prob from chi2 cdf
+        # define anomaly threshold, define confidence interval q (level of reliability)
+        # stats.chi2.ppf(q,df) 'inverse of cdf returns score for given probability
+        # if y_prob > anomaly threshold
+        #   t2_bools = True
+        # else
+        #   t2_bools = False
+        #
+        #return t2_bools
+        pass
+
+    def evaluate_pred(self,direction, y_clf):
+
+        # direction from column generation
+        # y_clf : prediction from surrogate model
+
+        #transfrom input (direction) with block-dependent scaler
+        #call chi2_test to find outlier and return boolean value (update_model)
+        # if outlier
+        #   update_model == True
+        # else 
+        #   update_model = False
+        #apply local_nlp_solve(direction) -> check if predicted binaries contribute to a smaller obj_value
+        #calc min inner point
+        #compare obj_values from predicted and current point and decide if model has to be updated
+        # if new_point == True
+        #   if obj_value_new < obj_value
+                #update_model = False
+
+
+        #return update_model, new_point
+        pass
+
+    def local_nlp_solve(self, direction, x_k):
+        # direction from CG
+        # x_k starting point for local solver
+
+        # new point : boolean
+        # y_tilde: point (ndarray)
+        # obj_value: number (float)
+
+        #return new_point, y_tilde, obj_value
+        pass
+
+    def get_min_inner_point(self,dir_orig_space):
+        # calculates the obj_value d^T*x , Dot Product of direction and point
+        #return obj_value
+        pass
 
 
 
@@ -252,6 +313,9 @@ Devide the concept into activities.
                 training the surrogate model for some iterations
                 testing the Surrogate_model after some iterations
 12.01.2022      more advanced graphics -> display from what phase training data comes (ia_init, approx_colgen, fwcolgen)
+
+19.01.2022      Design Experiments (Different amount of training/test data & leaving out data (e.g from ia_init, approx colgen))
+                start working on evaluator (first -> proposal in concept file)
 
 7 plan & milestones: (2 days per week)
 -----------------------------------------------------------
