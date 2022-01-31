@@ -181,6 +181,7 @@ class StreamBatchData:
             print('=======================')
             print('y_tr', y_tr)
             x_new = x_scaler.transform(new_direction.reshape(1, -1))
+            #PREDICT
             y_clf_new = clf.predict(x_new)
             print('y_clf_new',y_clf_new)
             y_clf_new = y_clf_new.reshape(1, -1)
@@ -774,7 +775,7 @@ class DecogoEvaluation:
 
         # solve the sub-problem
         tilde_y, new_point_obj_val, _, sol_is_feasible = \
-            self.problem.sub_problems[block_id].local_solve_clf(
+            self.problem.sub_problems[block_id].local_solve(
                 direction=dir_orig_space,
                 start_point=integer_point)
 
@@ -807,7 +808,7 @@ class DecogoEvaluation:
 
         # solve the sub-problem
         tilde_y, new_point_obj_val, _, sol_is_feasible = \
-            self.problem.sub_problems[block_id].local_solve(
+            self.problem.sub_problems[block_id].local_solve_clf(
                 direction=dir_orig_space,
                 start_point=best_point)
 

@@ -640,28 +640,31 @@ class SurrogateModel:
         print('============')
         print('     x      ')
         print('shape: ', x.shape, 'type:', type(x))
-        print(x)
-        p = np.zeros((1, len(index)))
+
+        bin_glob = np.zeros((1, len(index)))
         i = 0
         for idx in index:
             #x[idx] = round()
-            p[0, i] = round(point[idx])
+            bin_glob[0, i] = round(point[idx])
             i += 1
 
         print('feasible point from Global Subsolver')
-        print(p)
+        print(bin_glob)
 
         print('prediction:')
         pred = self.predict(block_id, np.array([direction]))
         print(pred)
-        prediction = pred.flatten()
+        bin_pred = pred.flatten()
         # build complete vector (point) with continuous variables from nlp solver and binaries from surrogate model
         j = 0
         for idx in index:
-            x[idx] = prediction[j]
+            x[idx] = bin_pred[j]
             j += 1
-        print('===========x_ia====block'+str(block_id)+'=====')
-        print(x_ia[block_id, :])
-        print('==============x==========')
-        print(x)
-        return prediction, p, x, point
+
+        '''
+        :param: prediction, only binaries (predicted)
+        :param: p, only binaries (global solve)
+        :param: x, complete vector (binaries & continuous) with predicted
+        :param: point, point from global sub solver
+        '''
+        return bin_pred, bin_glob, x, index

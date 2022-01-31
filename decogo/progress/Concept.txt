@@ -69,67 +69,64 @@ Describe
 
     *Name: SurrogateModel
         Parameters:
-            classifiers: dict, elemen: 
-            block_ids
-            scaling_parameters: dict, elemen: mean, var 
+            
+            block_id: integer
             binary_index: dict, elemen: list of binary index in a block
-            split_test = 0.2 #uses 20% of accumlated data for validation
+            
         Methods:
-            def __init__(block_ids, binary_index) todo
+            def __init__(block_id, binary_index) 
                 
-                     self.clf_batch = dict, elem = NN for each block
-                
-                # init define block_ids, binary indexes
-                     self.block_ids ...
-                     self.binary_index = binary_index
+                self.clf_batch = {} 'dict, elem = NN for each block
+                self.scaler = {} ' scaler for each block
+                self.block_id = block_id
+                self.binary_index = binary_index
+                self.test_split = ### ' preset train/test ratio
 
-            def init_train(block_id, training_data) todo
+            def init_train(block_id, training_data) 
+                # data from SubSolverData (training_data)
                 #define the neuronal network
-                #hidden layers
-                #activation functions
-                #solver
-
-                # data from SubSolverData
-
-                # read/split input and output data
-                # uses split_data
+                #hidden layers, activation functions, solver, loss
+                #Tensorflow package
+                              
+                X_train, y_train = self.split_data(block_id, training data, test = False)     'read/split input and output data
+                
                 # preprocess input data -> scaled input output data
-                    Sklearn.Preprocessing -> StandardScaler
-                    self.scaler[block_id].transform(X)
-                # initial training of the model -> fit self.clf_batch
-                    self.clf_batch.fit(x, y)
+                #Sklearn.Preprocessing -> StandardScaler (Sklearn)
+                self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
+                X_scaled = self.scaler[block_id].transform(X_train)
+
+                # initial training of the model tensorflow sequential.fit
+                self.clf_batch.fit(x, y)
                      
             def predict(block_id, direction) todo
-                # read directions
+                # read directions (orig_space)
                 # directions as input for the ML_Model
+
                 # preprocess input data -> standardize data
-                    StandardScaler (Sklearn) 
-                    transformed_direction = self.scaler[block_id].transform(direction)
-                # make predictions, sklearn -> MLPClassifier.predict
-                    prediction = self.clf_batch[block_id].predict(transformed_direction)
-                # inverse transfrom standardization of output
-                    inversetransfrom_pred = self.scaler[block_id].inversetransfrom(prediction)
-                # return prediction
-                # 
+                    
+                transformed_direction = self.scaler[block_id].transform(direction)
+
+                # make predictions, tensorflow -> Sequential.predict
+                prediction = self.clf_batch[block_id].predict(transformed_direction)
+                
+                # round prediction to no digit binaries (0,1)
+                prediction = np.around(prediction)
+
+                return prediction
+                 
             
             
      
-            def test_init_train(validation_data, block_id)      
+            def test_init_train(block_id, training_data)      
                 # predict with SurrogateModel
                 # uses split_data method
-                # 10th iteration -> enough data to call init_train
-                # 15th iteration -> new data generated as validation_data
-                # test with more/less data to see if SurrogateModel is working
-                # show score, accuracy of SurrogateModel
-                # generate Plots (see presentation)
-            
-            
-            --------------------------------------------------------
-            def update(block_id, training_data)                                    todo
-                # accumulate more training data and update model
-                # 
+                X_test, y_test = self.split_data(block_id, training data, test = True) 
+                
+                pred = self.predict(block_id, X_test, y_test)
 
-            def update_model_specifications()     
+                return pred
+            
+               
 
             def split_data(block_id, training_data, test = False)
                 # splits training/test data (dictionary) into input/output - arrays
@@ -141,10 +138,19 @@ Describe
                 
                 returns X, y   
 
-            def ml_sub_solve(block_id, direction)
+            def ml_sub_solve(block_id, direction, point, x_ia)
                 # reads direction from master problem
-                # transfrom into orig space
-                # makes prediction        
+                # point: feasible point from global subsolver
+                # x_ia: primal solution from LP-IA Masterproblem -> starting point for NLP-Solver
+                # 
+                # make prediction   
+                pred = self.prediction(block_id, direction)   
+
+                # build vector with new prediction as input for NLP-Solver -> X
+                # easy comparison between pred (Surrogate_model) and p (global subsolver)
+                # similarly x and point, but as fully set up vector with bin and cont variables
+
+                return pred, p, x, point  
 
 
 
@@ -177,8 +183,35 @@ Describe
           while True:
             self.result.main_iterations += 1
          -----------------------------------
+
          
-     
+
+    Class RefactoryColGen
+        # add method anomaly_detection (decide whether to call global solver [subproblem])
+        # add method eval_prediction (call global solve and compare to prediction -> decide if to update model [refactory_colgen])
+        # add method update_model
+
+     def evaluate_pred(self,direction, y_clf):
+
+            # direction from column generation
+            # y_clf : prediction from surrogate model
+
+            #transfrom input (direction) with block-dependent scaler
+            #call chi2_test to find outlier and return boolean value (update_model)
+            # if outlier
+            #   update_model == True
+            # else 
+            #   update_model = False
+            #apply local_nlp_solve(direction) -> check if predicted binaries contribute to a smaller obj_value
+            #calc min inner point
+            #compare obj_values from predicted and current point and decide if model has to be updated
+            # if new_point == True
+            #   if obj_value_new < obj_value
+                    #update_model = False
+
+
+            #return update_model, new_point
+            pass
      
      
      
@@ -198,14 +231,16 @@ Describe
             def verfication()
                 #evaulates if prediction made by the model is right/wrong
 
+    
+
 - class design for applying anomaly detection
-class evaluator:
+class anomaly_detection:
 
     def __init__(self,):
 
-        pass
+        self.pca_model = {}
 
-    def chi2_test(self,direction, x, dof):
+    def hoteling_t2(self,direction, x, dof):
         # takes tranformed direction t_n
         # chi2 distribution from scipy.stats
         # calc mean, variance of the direction
@@ -223,27 +258,7 @@ class evaluator:
         #return t2_bools
         pass
 
-    def evaluate_pred(self,direction, y_clf):
-
-        # direction from column generation
-        # y_clf : prediction from surrogate model
-
-        #transfrom input (direction) with block-dependent scaler
-        #call chi2_test to find outlier and return boolean value (update_model)
-        # if outlier
-        #   update_model == True
-        # else 
-        #   update_model = False
-        #apply local_nlp_solve(direction) -> check if predicted binaries contribute to a smaller obj_value
-        #calc min inner point
-        #compare obj_values from predicted and current point and decide if model has to be updated
-        # if new_point == True
-        #   if obj_value_new < obj_value
-                #update_model = False
-
-
-        #return update_model, new_point
-        pass
+    
 
     def local_nlp_solve(self, direction, x_k):
         # direction from CG

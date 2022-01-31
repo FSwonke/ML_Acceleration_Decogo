@@ -9,7 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-
+from sklearn.decomposition import PCA
+from scipy import stats
+from sklearn.preprocessing import StandardScaler
 from decogo.solver.settings import Settings
 from decogo.util.block_vector import BlockVector
 
@@ -174,7 +176,7 @@ class RefactoryColGen:
             self.result.main_iterations += 1
             print('iteration', self.result.main_iterations)
             print('=====================Plotting====================')
-            self.plot_train_data(1, self.tdata)
+            #self.plot_train_data(1, self.tdata)
             tic_i_start = time.time()
 
             num_subproblems_solved = self.result.cg_num_minlp_problems
@@ -241,15 +243,17 @@ class RefactoryColGen:
                 point_list[k] = []
                 pred_list[k] = []
                 if self.problem.block_model.sub_models[k].linear is False:
-                    fpoint, _, delta_k, new_point, _, training_data, len_data = \
+                    fpoint, _, delta_k, new_point, _ = \
                         self.generate_column(k, reduced_cost_direction)
                     if self.result.main_iterations == 2:
-                        self.init_ML(k, training_data)
+                        self.init_ML(k)
                     if self.result.main_iterations >= 3:
-                        pred, y_test = self.test_ML(k, training_data)
+                        #pred, y_test = self.test_ML(k, training_data)
+                        #dir= direction (duals from LP_IA Masterproblem (orig space))
                         dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
-                        pred, glob_point = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
-
+                        bin_pred, bin_glob, bin_index = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
+                        update_model= self.eval_prediction(block_id=k, dir_im_space=reduced_cost_direction, y_clf=bin_pred, x_ia=x_ia
+                                                           , binary_index=bin_index)
                         #print('feasbile point from subsolver')
                         #print(fpoint)
                     if delta_k <= -1e-3:
@@ -285,18 +289,20 @@ class RefactoryColGen:
                             # until optimality not clear whether it will slow
                             # down everything too much maybe here is better
                             # to use just stricter settings for SCIP
-                            fpoint, _, delta_k, new_point, _, training_data, len_data = \
+                            fpoint, _, delta_k, new_point, _ = \
                                 self.generate_column(k,
                                                      reduced_cost_direction,
                                                      heuristic=False)
                             if self.result.main_iterations == 2:
-                                self.init_ML(k, training_data)
+                                self.init_ML(k)
                             if self.result.main_iterations >= 3:
-                                pred, y_test = self.test_ML(k, training_data)
+                                #pred, y_test = self.test_ML(k, training_data)
                                 dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
 
-                                pred, glob_point = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
-
+                                bin_pred, bin_glob, bin_index = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
+                                update_model = self.eval_prediction(block_id=k, dir_im_space=reduced_cost_direction, y_clf=bin_pred,
+                                                                    x_ia=x_ia,
+                                                                    binary_index=bin_index)
                                 #print('feasbile point from subsolver')
                                 #print(fpoint)
                             if delta_k <= -1e-3:
@@ -422,8 +428,9 @@ class RefactoryColGen:
             z, x_ia, w_ia, slacks, duals, obj_value_ia = \
                 self.problem.master_problems.solve_ia(self.settings.lp_solver)
             print('=======x_ia========')
-            print(type(x_ia[0, :]))
-            print(x_ia[0, :])
+            #print(x_ia)
+            #print(type(x_ia[0, :]))
+            #print(x_ia[0, :])
             self.result.cg_relaxation = obj_value_ia
             if i == 0:
                 initial_obj_value_ia = obj_value_ia
@@ -458,7 +465,7 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
-                _, _, reduced_cost_list[k], new_point, _, _, len_data = \
+                _, _, reduced_cost_list[k], new_point, _ = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
                                          x_k=x_ia.get_block(k))
@@ -482,7 +489,7 @@ class RefactoryColGen:
                     slack_direction = self.get_slack_directions(slacks)
                     for k in blocks:
                         tic = time.time()
-                        _, _, _, new_point, _, _, _ = \
+                        _, _, _, new_point, _ = \
                             self.generate_column(k, slack_direction,
                                                  approx_solver=approx_solver,
                                                  x_k=x_ia.get_block(k))
@@ -602,7 +609,7 @@ class RefactoryColGen:
                         self.local_solve_subproblem(
                             k, direction, x_k=x_ia.get_block(k))
                 else:
-                    _, _, reduced_cost_list[k], new_point, r_k, _, _ = \
+                    _, _, reduced_cost_list[k], new_point, r_k = \
                         self.generate_column(k, direction)
                 generate_column_time_list[k] = round(time.time() - tic,
                                                      2)
@@ -760,7 +767,7 @@ class RefactoryColGen:
             direction = np.concatenate(([1], direction_vector))
             for k in range(self.problem.block_model.num_blocks):
                 tic = time.time()
-                feasible_point, primal_bound, reduced_cost, new_point, _, _, _ = \
+                feasible_point, primal_bound, reduced_cost, new_point, _ = \
                     self.generate_column(k, direction)
                 time_generate_column_sub_gradient_list[k] = round(
                     time.time() - tic, 2)
@@ -834,19 +841,19 @@ class RefactoryColGen:
                                                       x_k=x_k)
                 if reduced_cost > -0.01:
                     feasible_point, reduced_cost, primal_bound, _, \
-                     is_new_point, column, data, len_data = \
+                     is_new_point, column = \
                      self.global_solve_subproblem(
                          block_id, direction, heuristic=heuristic)
                 #logger.info('Training Data {0} Block {1}, reducedcost > -0.01'.format(len(data), block_id))
 
             else:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
-                 column, data, len_data = self.global_solve_subproblem(
+                 column = self.global_solve_subproblem(
                     block_id, direction, heuristic=heuristic)
 
         reduced_cost = round(reduced_cost, 3)
 
-        return feasible_point, primal_bound, reduced_cost, is_new_point, column, data, len_data
+        return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
     def global_solve_subproblem(self, block_id,
                                 dir_im_space,
@@ -889,8 +896,8 @@ class RefactoryColGen:
                 direction=dir_orig_space, result=self.result)
 
         #store data for the ML-Model
-        data = self.problem.training_data(block_id, dir_orig_space, feasible_point)
-        self.tdata = data
+        self.problem.training_data(block_id, dir_orig_space, feasible_point)
+
         #check, if get_size_training_data method works
         len_data = self.problem.get_size_training_data(block_id)
         print('length data: ',len_data, 'in block:',block_id)
@@ -926,7 +933,7 @@ class RefactoryColGen:
             self.result.optimal_subproblems = False
 
         return feasible_point, reduced_cost, primal_bound, dual_bound, \
-            is_new_point, column, data, len_data
+            is_new_point, column
 
     def get_slack_directions(self, slacks):
         """Computes new direction based on the slack values of IA master problem
@@ -1058,13 +1065,15 @@ class RefactoryColGen:
         for k in range(self.problem.block_model.num_blocks):
             logger.info('block {0}: {1}'.format(k, non_zero_z[k]))
 
-    def init_ML(self, block_id, training_data):
+    def init_ML(self, block_id):
+        training_data = self.problem.get_training_data()
         return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data)
 
     def test_ML(self, block_id, training_data):
         return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data)
 
     def ml_sub_solve(self, block_id, direction, point, x_ia, result):
+
         return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point, x_ia, result)
 
     def plot_train_data(self, block_id, training_data):
@@ -1101,11 +1110,11 @@ class RefactoryColGen:
             fwcolgen = np.linspace(self.phase_list[k][1], self.phase_list[k][2]-1, self.phase_list[k][2] - self.phase_list[k][1], dtype=int)
 
             print('appcolgen', appcolgen.shape)
-            print('X 0-1 ', X[self.phase_list[k][0]:self.phase_list[k][1]+1,1].shape)
+            print('X 0-1 ', X[self.phase_list[k][0]:self.phase_list[k][1],1].shape)
             print('fwcolgen: ', fwcolgen.shape)
             print(fwcolgen)
-            print('X 1-2: ', X[self.phase_list[k][1]:self.phase_list[k][2],1].shape)
-            print(X[self.phase_list[k][1]:self.phase_list[k][2],1])
+            print('X 1-2: ', X[self.phase_list[k][1]:self.phase_list[k][2]+1,1].shape)
+            print(X[self.phase_list[k][1]:self.phase_list[k][2]+1,1])
             print('xshape ',X.shape)
             print('X:')
             print(X)
@@ -1151,3 +1160,143 @@ class RefactoryColGen:
                 plt.savefig('Block'+str(k)+'Points_bin' + str(j))
                 #plt.show()
 
+    def eval_prediction(self, block_id, dir_im_space, y_clf, x_ia, binary_index):
+        '''
+        method to call global solve is required after comparing to prediction
+
+        :param: direction, new direction from LP-IA
+        :type: ndarray
+        :param: y_clf , predicted binaries from SG
+        :type: ndarray
+        :param: tdata, training data (corr. direction & points)
+        :type: dict
+
+
+        '''
+        # get training data
+        training_data = self.problem.get_training_data()
+        # transform direction from im_space to orig_space
+        dir_orig_space = self.problem.block_model.trans_into_orig_space(block_id, dir_im_space)
+        # make 2D-Array
+        dir_orig_space = dir_orig_space.reshape(1, -1)
+        # get previous directions by splitting in- and outputs
+        X, y = self.problem.sub_problems[block_id].split_data(block_id, training_data)
+        print('last added direction')
+        print(X[-1, :])
+        print('X shape')
+        print(X.shape)
+        print('last added point')
+        print(y[-1, :])
+        print('y shape')
+        print(y.shape)
+
+        #scaler = self.problem.sub_problems[block_id].get_scaler
+        # call anomaly detection (Scaling and PCA)
+        T_tr, T_n, n_components = self.anomaly_detection(block_id, X, dir_orig_space)
+
+        # hotellings_t2 test
+        y_proba, y_score, t2_bools, param = self.hotellings_t2(T_tr, T_n, n_components)
+
+        for t2_outlier in t2_bools:
+            if t2_outlier:
+                update_model = True
+                print("pca >> t2 outlier, update_model = ", update_model)
+                break
+            else:
+                update_model = False
+        sol = x_ia[block_id, :]
+
+        j = 0
+        for idx in binary_index:
+            sol[idx] = y_clf[j]
+            j += 1
+        tilde_y, new_point_obj_val, reduced_cost, is_new_point, column = self.local_solve_subproblem(block_id,
+                                                                                                     dir_im_space,
+                                                                                                     x_k=sol)
+        min_point, min_obj_val = self.problem.get_min_inner_point(block_id, dir_orig_space)
+        print('new_point_obj_val', new_point_obj_val)
+        print('min_obj_val', min_obj_val)
+        if is_new_point:
+            print('=====================')
+            print('is new point', is_new_point)
+            print('=====================')
+            #data = self.problem.training_data(block_id, dir_orig_space, tilde_y)
+            #len_data = self.problem.get_size_training_data(block_id)
+            if new_point_obj_val <= min_obj_val:
+                update_model = False
+        if update_model:
+            print('=====================')
+            print('model is updated with global solving')
+            print('=====================')
+            feasible_point, reduced_cost, primal_bound, dual_bound, \
+            is_new_point, column = self.global_solve_subproblem(self, block_id,
+                                    dir_im_space,
+                                    compute_reduced_cost=True,
+                                    heuristic=True)
+            # append new direction & point
+            self.problem.training_data(block_id, dir_orig_space, feasible_point)
+        return update_model
+
+    def hotellings_t2(self, X, x_n, df=3, n_components=5, alpha=0.05):
+        '''
+        :param direction: new direction (in original space)
+        :type: ndarray
+        :param x: all previous collected directions
+        :type: ndarray
+        :param df: degree of freedom
+        :type: integer
+        :param alpha: level of reliability
+        :type: float
+        :param n_components: number of components to be used in PCA
+        :type: integer
+
+        '''
+        n_components = np.minimum(n_components, X.shape[1])
+        X = X[:, 0:n_components]
+
+        x_n = x_n[:, 0:n_components]
+        y_n = x_n
+
+        mean, var = np.mean(X), np.var(X)
+        param = (mean, var)
+        y_score = (y_n - mean) ** 2 / var
+        y_proba = 1 - stats.chi2.cdf(y_score, df=df)
+
+        anomaly_score_theshold = stats.chi2.ppf(q=(1 - alpha), df=df)
+        k = 0
+        t2_bools = []
+        #print('y_score ',y_score)
+        #print('anomaly_score ', anomaly_score_theshold)
+        for k in range(y_n.shape[0]):
+            if y_score.flatten()[k] > anomaly_score_theshold:
+                t = True
+            else:
+                t = False
+            t2_bools.append(t)
+
+
+        return y_proba, y_score, t2_bools, param
+
+    def anomaly_detection(self, block_id, X, dir_orig_space):
+        scaler = StandardScaler().fit(X)
+        # scale all previous directions
+        x_tr = scaler.transform(X)
+        # scale new direction
+        x_n = scaler.transform(dir_orig_space)
+        # PCA init
+        pca_model = {}
+        pca_model[block_id] = PCA().fit(x_tr)
+        # PCA all previous directions
+        T_tr = pca_model[block_id].transform(x_tr)
+        # PCA new direction
+        T_n = pca_model[block_id].transform(x_n)
+        explained_variance_ratio = pca_model[block_id].explained_variance_ratio_
+        accumulated_var_ratio = explained_variance_ratio[0]
+        ratio_threshold = 0.95
+        for n in range(x_tr.shape[1]):
+            if accumulated_var_ratio >= ratio_threshold:
+                n_components = n + 1
+                break
+            else:
+                accumulated_var_ratio += explained_variance_ratio[n + 1]
+        return T_tr, T_n, n_components

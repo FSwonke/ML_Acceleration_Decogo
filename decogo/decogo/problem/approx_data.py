@@ -77,6 +77,9 @@ class ApproxData:
     def get_training_data_size(self, block_id):
 
         return self.sub_solver_data.get_size(block_id)
+    
+    def get_training_data(self):
+        return self.sub_solver_data.get_training_data()
 
 
 class InnerPoints:
@@ -655,3 +658,10 @@ class SubSolverData:
         :returns number of directions and points (amount of training data)
         '''
         return len(self.tdata[block_id])
+
+    def get_training_data(self):
+        '''
+        :param: block_id
+        :type: int
+        '''
+        return self.tdata

@@ -998,27 +998,31 @@ class PyomoSubProblems(SubProblemsBase):
 
     def ml_sub_solver(self, block_id, direction, point, x_ia, result):
         '''
-        :param:
+        :param: direction, dual solution from LP-IA Masterproblem
         :type:
+        :param: x_ia, primal solution from LP-IA
         :return: prediction, p_int
         :rtype:
         '''
         #prediction (ndarray), is primal solution to LP-IA Masterproblem, including the predicted binaries from Surrogate model
-        prediction, p_int, x_sg, point = self.surrogate_model.sub_solve(block_id, direction, point, x_ia)
-        print('=====================================================')
-        print('     Starting NLP with predicted binaries            ')
-        print('=====================================================')
-        tilde_y, new_point_obj_val, dual_bound, sol_is_feasible = self.local_solve(result, direction, start_point=x_sg.flatten())
-        print('tilde_y')
-        print(tilde_y)
-        print('point')
-        print(point)
-        print('new_point_obj_val')
-        print(new_point_obj_val)
-        print('dual bound')
-        print(dual_bound)
-        return prediction, p_int
+        bin_pred, bin_glob, x_sg, bin_index = self.surrogate_model.sub_solve(block_id, direction, point, x_ia)
+        #print('=====================================================')
+        #print('     Starting NLP with predicted binaries            ')
+        #print('=====================================================')
+        #tilde_y, new_point_obj_val, dual_bound, sol_is_feasible = self.local_solve(result, direction, start_point=x_sg.flatten())
+        #print('tilde_y')
+        #print(tilde_y)
+        #print('point')
+        #print(point)
+        #print('new_point_obj_val')
+        #print(new_point_obj_val)
+        #print('dual bound')
+        #print(dual_bound)
+        return bin_pred, bin_glob, bin_index
 
     def split_data(self, block_id, training_data, test=False):
 
         return self.surrogate_model.split_data(block_id, training_data, test)
+
+    def get_scaler(self):
+        return self.surrogate_model.scaler

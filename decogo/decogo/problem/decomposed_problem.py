@@ -117,3 +117,6 @@ class DecomposedProblem:
         """
         return self.approx_data.get_training_data_size(block_id)
 
+    def get_training_data(self):
+        return self.approx_data.get_training_data()
+
