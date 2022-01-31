@@ -191,30 +191,52 @@ Describe
         # add method eval_prediction (call global solve and compare to prediction -> decide if to update model [refactory_colgen])
         # add method update_model
 
-     def evaluate_pred(self,direction, y_clf):
+     def evaluate_pred(self,d_n, d_k, y_clf):
 
-            # direction from column generation
-            # y_clf : prediction from surrogate model
+            
+        T_n, T_k = anomaly_detection(d_n, d_k)
+        t2_bools = hotellings_t2(T_n, T_k)
+        for t2_outlier in t2_bools:
+                if outlier 
+                update_model == True
+                else 
+                update_model = False
 
-            #transfrom input (direction) with block-dependent scaler
-            #call chi2_test to find outlier and return boolean value (update_model)
-            # if outlier
-            #   update_model == True
-            # else 
-            #   update_model = False
-            #apply local_nlp_solve(direction) -> check if predicted binaries contribute to a smaller obj_value
-            #calc min inner point
-            #compare obj_values from predicted and current point and decide if model has to be updated
-            # if new_point == True
-            #   if obj_value_new < obj_value
-                    #update_model = False
+        #apply local_nlp_solve(direction) -> check if predicted binaries contribute to a smaller obj_value
+        #calc min inner point
+        #compare obj_values from predicted and current point and decide if model has to be updated
+        # if new_point == True
+        #   if obj_value_new < obj_value
+                #update_model = False
 
 
-            #return update_model, new_point
-            pass
+        return update_model, new_point
+        
      
-     
-     
+     def anomaly_detection(self, d_n, d_k):
+        x_n_scaled <- scale d_n
+        x_k_scaled <- scale d_k
+
+        T_n <- PCA (x_n_scaled)
+        T_k <- PCA (x_k_scaled)
+
+        return T_n, T_k
+
+    def hotellings_t2(T_n, T_k):
+        n_components
+        mean & variance
+        y_score = (y_n - mean) ** 2 / var
+        y_proba = 1 - stats.chi2.cdf(y_score, df=df)
+
+        anomaly_score_theshold = stats.chi2.ppf(q=(1 - alpha), df=df)
+        for k in range(y_n.shape[0]):
+            if y_score.flatten()[k] > anomaly_score_theshold:
+                t = True
+            else:
+                t = False
+            t2_bools.append(t)
+
+        return t2_bools
      
      Class MLSubSolver
     *Name: "predictinnerpoint"
