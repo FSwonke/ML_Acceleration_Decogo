@@ -52,7 +52,9 @@ class RefactoryColGen:
         print('=======================')
         print('IA_init done')
         print('=======================')
+        print(self.ndata)
         for k_phase in range(self.problem.block_model.num_blocks):
+
             self.phase_list[k_phase].append(self.ndata[k_phase])
         k_phase = 0
 
@@ -169,14 +171,19 @@ class RefactoryColGen:
         print('phase_list')
         print(self.phase_list)
         print('====================================================')
+
+        for k in range(self.problem.block_model.num_blocks):
+            self.init_ML(k)
+        k=0
         while True:
             print('=====================================================')
             print('                 main iteration                      ')
             print('=====================================================')
+
             self.result.main_iterations += 1
             print('iteration', self.result.main_iterations)
-            print('=====================Plotting====================')
-            #self.plot_train_data(1, self.tdata)
+
+
             tic_i_start = time.time()
 
             num_subproblems_solved = self.result.cg_num_minlp_problems
@@ -184,6 +191,7 @@ class RefactoryColGen:
             tic = time.time()
             print('Column Generation')
             self.column_generation(hat_k_set)
+
             time_column_generation = round(time.time() - tic, 2)
             logger.info('CG relaxation obj. value in iter {0}: {1}'
                         .format(self.result.main_iterations, self.result.sense *
@@ -237,25 +245,19 @@ class RefactoryColGen:
 
             # reduce block set based on the reduced cost
             hat_k_set = []
-            point_list = {}
-            pred_list = {}
+
+
             for k in range(self.problem.block_model.num_blocks):
-                point_list[k] = []
-                pred_list[k] = []
+
                 if self.problem.block_model.sub_models[k].linear is False:
+                    '''
                     fpoint, _, delta_k, new_point, _ = \
                         self.generate_column(k, reduced_cost_direction)
-                    if self.result.main_iterations == 2:
-                        self.init_ML(k)
-                    if self.result.main_iterations >= 3:
-                        #pred, y_test = self.test_ML(k, training_data)
-                        #dir= direction (duals from LP_IA Masterproblem (orig space))
-                        dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
-                        bin_pred, bin_glob, bin_index = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
-                        update_model= self.eval_prediction(block_id=k, dir_im_space=reduced_cost_direction, y_clf=bin_pred, x_ia=x_ia
-                                                           , binary_index=bin_index)
-                        #print('feasbile point from subsolver')
-                        #print(fpoint)
+                    '''
+                    feasible_point, primal_bound, delta_k, \
+                    new_point, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia)
+                    #'''
+
                     if delta_k <= -1e-3:
                         hat_k_set.append(k)
 
@@ -272,6 +274,7 @@ class RefactoryColGen:
             # check if reduced block set is empty.
             # if it is empty then we stop, since for all blocks reduced cost
             # was positive
+
             if len(hat_k_set) == 0:
                 if self.settings.cg_check_convergence is True:
                     logger.info('CG converges, checking the convergence by '
@@ -289,22 +292,16 @@ class RefactoryColGen:
                             # until optimality not clear whether it will slow
                             # down everything too much maybe here is better
                             # to use just stricter settings for SCIP
+                            '''
                             fpoint, _, delta_k, new_point, _ = \
                                 self.generate_column(k,
                                                      reduced_cost_direction,
                                                      heuristic=False)
-                            if self.result.main_iterations == 2:
-                                self.init_ML(k)
-                            if self.result.main_iterations >= 3:
-                                #pred, y_test = self.test_ML(k, training_data)
-                                dir = self.problem.block_model.trans_into_orig_space(k, reduced_cost_direction)
+                            '''
+                            feasible_point, primal_bound, delta_k,\
+                                new_point, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia)
+                            #'''
 
-                                bin_pred, bin_glob, bin_index = self.ml_sub_solve(k, dir, fpoint, x_ia, self.result)
-                                update_model = self.eval_prediction(block_id=k, dir_im_space=reduced_cost_direction, y_clf=bin_pred,
-                                                                    x_ia=x_ia,
-                                                                    binary_index=bin_index)
-                                #print('feasbile point from subsolver')
-                                #print(fpoint)
                             if delta_k <= -1e-3:
                                 hat_k_set.append(k)
 
@@ -365,6 +362,12 @@ class RefactoryColGen:
         print('phase_list')
         print(self.phase_list)
         print('====================================================')
+        #self.plot_train_data()
+        print('times main iteration: ', time_i_loop_set)
+        k=0
+        for k in range(self.problem.block_model.num_blocks):
+            pred, y_test, score = self.test_ML(k)
+            self.write_text(k, score)
 
     def ia_init(self, duals=None):
         """Initialization of inner outer approximation
@@ -465,10 +468,16 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
+                '''
                 _, _, reduced_cost_list[k], new_point, _ = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
                                          x_k=x_ia.get_block(k))
+                '''
+                _, _, reduced_cost_list[k], \
+                    new_point, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia,
+                                                  approx_solver=approx_solver)
+                #'''
                 generate_column_time_list[k] = round(time.time() - tic, 2)
                 if new_point is True:
                     new_columns_generated[k] += 1
@@ -844,7 +853,6 @@ class RefactoryColGen:
                      is_new_point, column = \
                      self.global_solve_subproblem(
                          block_id, direction, heuristic=heuristic)
-                #logger.info('Training Data {0} Block {1}, reducedcost > -0.01'.format(len(data), block_id))
 
             else:
                 feasible_point, reduced_cost, primal_bound, _, is_new_point, \
@@ -852,6 +860,15 @@ class RefactoryColGen:
                     block_id, direction, heuristic=heuristic)
 
         reduced_cost = round(reduced_cost, 3)
+        dir_orig_space = \
+            self.problem.block_model.trans_into_orig_space(block_id,
+                                                           direction)
+        # store data for the ML-Model
+        self.problem.training_data(block_id, dir_orig_space, feasible_point)
+        # check, if get_size_training_data method works
+        len_data = self.problem.get_size_training_data(block_id)
+        print('length data: ', len_data, 'in block:', block_id)
+        self.ndata[block_id] = len_data
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
@@ -895,13 +912,7 @@ class RefactoryColGen:
             self.problem.sub_problems[block_id].global_solve(
                 direction=dir_orig_space, result=self.result)
 
-        #store data for the ML-Model
-        self.problem.training_data(block_id, dir_orig_space, feasible_point)
 
-        #check, if get_size_training_data method works
-        len_data = self.problem.get_size_training_data(block_id)
-        print('length data: ',len_data, 'in block:',block_id)
-        self.ndata[block_id] = len_data
 
         column = None
         if compute_reduced_cost is True:
@@ -1067,98 +1078,115 @@ class RefactoryColGen:
 
     def init_ML(self, block_id):
         training_data = self.problem.get_training_data()
-        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data)
+        phase = self.phase_list[block_id]
+        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data, phase)
 
-    def test_ML(self, block_id, training_data):
+    def test_ML(self, block_id):
+        training_data = self.problem.get_training_data()
         return self.problem.sub_problems[block_id].ml_sub_solver_test_init_train(block_id, training_data)
 
-    def ml_sub_solve(self, block_id, direction, point, x_ia, result):
+    def ml_sub_solve(self, block_id, dir_im_space):
+        direction = self.problem.block_model.trans_into_orig_space(block_id, dir_im_space)
+        return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction)
 
-        return self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction, point, x_ia, result)
-
-    def plot_train_data(self, block_id, training_data):
+    def plot_train_data(self):
         """method for printing data (inputs & outputs)
         :param:
         """
-        test = False
+        plot = True
+        if plot:
+            test = False
+            training_data = self.problem.get_training_data()
+            print('=====================Plotting====================')
+            for k in range(self.problem.block_model.num_blocks):
+                X, y = self.problem.sub_problems[k].split_data(k, training_data, test, shuffle_data=False)
 
-        for k in range(self.problem.block_model.num_blocks):
-            X, y = self.problem.sub_problems[k].split_data(k, training_data, test)
-            X_list = []
-            i = 0
-            for i in range(X.shape[1]):
-                X_list.append('d['+str(i)+']')
-                i += 1
-            y_list = []
-            i = 0
-            for i in range(y.shape[1]):
-                y_list.append('y['+str(i)+']')
-                i += 1
-            label = X_list+y_list #X_list.extend(y_list)
-            Xy = np.concatenate((X, y), axis=1)
-            df = pd.DataFrame(Xy, columns=label)
-            dfcorr = df.corr()
-            #print('correlation matrix')
-            #print(dfcorr)
-            plt.figure(figsize=(12, 8))
-            ax = sns.heatmap(dfcorr)
-            ax.set_title('Block'+str(k))
-            plt.savefig('Block'+str(k)+'_Heatmap')
-            linspace = np.linspace(0, X.shape[0], X.shape[0])
-            ia_init = np.linspace(0, self.phase_list[k][0]-1, self.phase_list[k][0], dtype=int)
-            appcolgen = np.linspace(self.phase_list[k][0], self.phase_list[k][1]-1, self.phase_list[k][1] - self.phase_list[k][0], dtype=int)
-            fwcolgen = np.linspace(self.phase_list[k][1], self.phase_list[k][2]-1, self.phase_list[k][2] - self.phase_list[k][1], dtype=int)
+                X_list = []
+                i = 0
+                for i in range(X.shape[1]):
+                    X_list.append('d['+str(i)+']')
+                    i += 1
+                y_list = []
+                i = 0
+                for i in range(y.shape[1]):
+                    y_list.append('y['+str(i)+']')
+                    i += 1
 
-            print('appcolgen', appcolgen.shape)
-            print('X 0-1 ', X[self.phase_list[k][0]:self.phase_list[k][1],1].shape)
-            print('fwcolgen: ', fwcolgen.shape)
-            print(fwcolgen)
-            print('X 1-2: ', X[self.phase_list[k][1]:self.phase_list[k][2]+1,1].shape)
-            print(X[self.phase_list[k][1]:self.phase_list[k][2]+1,1])
-            print('xshape ',X.shape)
-            print('X:')
-            print(X)
-            i = 0
-            for i in range(X.shape[1]):
-                fig1, ax1 = plt.subplots(1, 1)
-                #ax1.scatter(linspace, X[:, i], label='d[' + str(i) + ']')
-                #ax1.plot(linspace, X[:, i], 'r--')
-                ax1.plot(ia_init, X[0:self.phase_list[k][0], i], 'r--')
-                ax1.scatter(ia_init, X[0:self.phase_list[k][0], i], color='green', label='ia_init')
-                ax1.plot(appcolgen, X[self.phase_list[k][0]:self.phase_list[k][1],i], 'r--')
-                ax1.scatter(appcolgen, X[self.phase_list[k][0]:self.phase_list[k][1], i], color='blue', label='approx colgen')
-                ax1.plot(fwcolgen, X[self.phase_list[k][1]:self.phase_list[k][2]+1, i], 'r--')
-                ax1.scatter(fwcolgen, X[self.phase_list[k][1]:self.phase_list[k][2]+1, i], color='red', label='fwcolgen')
+                #training set
+                ia_init = np.arange(self.phase_list[k][0])
+                X_ia_init = np.take(X, ia_init, axis=0)
+                y_ia_init = np.take(y, ia_init, axis=0)
+                appcolgen = np.arange(self.phase_list[k][0], self.phase_list[k][1])
+                X_appcolgen = np.take(X, appcolgen, axis=0)
+                y_appcolgen = np.take(y, appcolgen, axis=0)
+                fwcolgen = np.arange(self.phase_list[k][1], self.phase_list[k][2])
+                X_fwcolgen = np.take(X, fwcolgen, axis=0)
+                y_fwcolgen = np.take(y, fwcolgen, axis=0)
 
+                #validation set
+                val_set = np.arange(self.phase_list[k][2], X.shape[0])
+                X_val = np.take(X, val_set, axis=0)
+                y_val = np.take(y, val_set, axis=0)
 
-                plt.grid()
-                plt.legend()
-                plt.title('Block '+str(k))
-                ax1.set_xlabel('iterations')
-                ax1.set_ylabel('d['+str(i)+']')
+                label = X_list + y_list
+                X_app_fw = np.concatenate((X_appcolgen, X_fwcolgen), axis=0)
+                y_app_fw = np.concatenate((y_appcolgen, y_fwcolgen), axis=0)
+                #use appcolgen and fwcolgen phase for corr matrix
+                #Xy = np.concatenate((X_app_fw, y_app_fw), axis=1)
+                #use all data for corr matrix
+                Xy = np.concatenate((X_app_fw, y_app_fw), axis=1)
+                df = pd.DataFrame(Xy, columns=label)
+                dfcorr = df.corr()
 
-                plt.savefig('Block'+str(k)+'Direction_comp'+str(i))
-
-                #plt.show()
-            for j in range(y.shape[1]):
-                fig2, ax1 = plt.subplots(1, 1)
-                #ax1.scatter(linspace, y[:, j],  label='y['+str(j)+']')
-                #ax1.plot(linspace, y[:, j], 'g--')
-                ax1.plot(ia_init, y[0:self.phase_list[k][0],j], 'g--')
-                ax1.scatter(ia_init, y[0:self.phase_list[k][0], j], color='green', label='ia_init')
-                ax1.plot(appcolgen, y[self.phase_list[k][0]:self.phase_list[k][1],j], 'g--')
-                ax1.scatter(appcolgen, y[self.phase_list[k][0]:self.phase_list[k][1], j], color='blue', label='approx colgen')
-                ax1.plot(fwcolgen, y[self.phase_list[k][1]:self.phase_list[k][2]+1,j], 'g--')
-                ax1.scatter(fwcolgen, y[self.phase_list[k][1]:self.phase_list[k][2]+1, j], color='red', label='fwcolgen')
+                plt.figure(figsize=(21, 14), dpi=200)
+                ax = sns.heatmap(dfcorr, annot=True, center=0)
+                ax.set_title('Block' + str(k))
+                plt.savefig('Block' + str(k) + '_Heatmap')
+                i = 0
+                for i in range(X.shape[1]):
+                    fig1, ax1 = plt.subplots(1, 1, figsize=(14, 10), dpi=200)
+                    #ax1.scatter(linspace, X[:, i], label='d[' + str(i) + ']')
+                    #ax1.plot(linspace, X[:, i], 'r--')
+                    ax1.plot(ia_init, X_ia_init[:, i], 'b--')
+                    ax1.scatter(ia_init, X_ia_init[:, i], color='magenta', label='ia_init')
+                    ax1.plot(appcolgen, X_appcolgen[:, i], 'b--')
+                    ax1.scatter(appcolgen, X_appcolgen[:, i], color='blue', label='approx colgen')
+                    ax1.plot(fwcolgen, X_fwcolgen[:, i], 'b--', label='training set')
+                    ax1.scatter(fwcolgen, X_fwcolgen[:, i], color='red', label='fwcolgen')
+                    ax1.plot(val_set, X_val[:, i], 'r--', label='global')
+                    #ax1.plot(val_set, X_val[:, i], 'g>', label='New Point')
 
 
-                plt.grid()
-                plt.legend()
-                plt.title('Block ' + str(k))
-                plt.xlabel('iterations')
-                plt.ylabel('y['+str(j)+']')
-                plt.savefig('Block'+str(k)+'Points_bin' + str(j))
-                #plt.show()
+                    plt.grid()
+                    plt.legend()
+                    plt.title('Block '+str(k))
+                    ax1.set_xlabel('iterations')
+                    ax1.set_ylabel('d['+str(i)+']')
+
+                    plt.savefig('Block'+str(k)+'Direction_comp'+str(i))
+
+                    #plt.show()
+                for j in range(y.shape[1]):
+                    fig2, ax1 = plt.subplots(1, 1, figsize=(14, 10),dpi=200)
+                    #ax1.scatter(linspace, y[:, j],  label='y['+str(j)+']')
+                    #ax1.plot(linspace, y[:, j], 'g--')
+                    ax1.plot(ia_init, y_ia_init[:, j], 'b--')
+                    ax1.scatter(ia_init, y_ia_init[:, j], color='magenta', label='ia_init')
+                    ax1.plot(appcolgen, y_appcolgen[:, j], 'b--')
+                    ax1.scatter(appcolgen, y_appcolgen[:, j], color='blue', label='approx colgen')
+                    ax1.plot(fwcolgen, y_fwcolgen[:, j], 'b--', label='training set')
+                    ax1.scatter(fwcolgen, y_fwcolgen[:, j], color='red', label='fwcolgen')
+                    ax1.plot(val_set, y_val[:, j], 'r--', label='global')
+                    #ax1.plot(val_set, y_val[:, j], 'g>', label='New Point')
+
+
+                    plt.grid()
+                    plt.legend()
+                    plt.title('Block ' + str(k))
+                    plt.xlabel('iterations')
+                    plt.ylabel('y['+str(j)+']')
+                    plt.savefig('Block'+str(k)+'Points_bin' + str(j))
+                    #plt.show()
 
     def eval_prediction(self, block_id, dir_im_space, y_clf, x_ia, binary_index):
         '''
@@ -1173,6 +1201,7 @@ class RefactoryColGen:
 
 
         '''
+
         # get training data
         training_data = self.problem.get_training_data()
         # transform direction from im_space to orig_space
@@ -1181,63 +1210,61 @@ class RefactoryColGen:
         dir_orig_space = dir_orig_space.reshape(1, -1)
         # get previous directions by splitting in- and outputs
         X, y = self.problem.sub_problems[block_id].split_data(block_id, training_data)
-        print('last added direction')
-        print(X[-1, :])
-        print('X shape')
-        print(X.shape)
-        print('last added point')
-        print(y[-1, :])
-        print('y shape')
-        print(y.shape)
 
         #scaler = self.problem.sub_problems[block_id].get_scaler
         # call anomaly detection (Scaling and PCA)
         T_tr, T_n, n_components = self.anomaly_detection(block_id, X, dir_orig_space)
 
         # hotellings_t2 test
-        y_proba, y_score, t2_bools, param = self.hotellings_t2(T_tr, T_n, n_components)
+        alpha = 0.8
+
+        y_proba, y_score, t2_bools, param = self.hotellings_t2(X=T_tr, x_n=T_n, n_components=n_components, alpha=alpha)
 
         for t2_outlier in t2_bools:
             if t2_outlier:
                 update_model = True
-                print("pca >> t2 outlier, update_model = ", update_model)
+                print("pca >> t2 outlier")
                 break
             else:
                 update_model = False
+
+        # setting start vector for NLP Solver
         sol = x_ia[block_id, :]
 
-        j = 0
-        for idx in binary_index:
-            sol[idx] = y_clf[j]
-            j += 1
-        tilde_y, new_point_obj_val, reduced_cost, is_new_point, column = self.local_solve_subproblem(block_id,
+        for n, idx in enumerate(binary_index):
+            sol[idx] = y_clf[n]
+
+        feasible_point, primal_bound, reduced_cost, is_new_point, column = self.local_solve_subproblem(block_id,
                                                                                                      dir_im_space,
                                                                                                      x_k=sol)
         min_point, min_obj_val = self.problem.get_min_inner_point(block_id, dir_orig_space)
-        print('new_point_obj_val', new_point_obj_val)
-        print('min_obj_val', min_obj_val)
+
         if is_new_point:
             print('=====================')
             print('is new point', is_new_point)
             print('=====================')
-            #data = self.problem.training_data(block_id, dir_orig_space, tilde_y)
-            #len_data = self.problem.get_size_training_data(block_id)
-            if new_point_obj_val <= min_obj_val:
+
+            #primal bound = new point obj val
+            if primal_bound <= min_obj_val:
                 update_model = False
+
         if update_model:
             print('=====================')
-            print('model is updated with global solving')
+            print('model is updated with global solver')
+            print('alpha=', alpha)
             print('=====================')
-            feasible_point, reduced_cost, primal_bound, dual_bound, \
-            is_new_point, column = self.global_solve_subproblem(self, block_id,
-                                    dir_im_space,
-                                    compute_reduced_cost=True,
-                                    heuristic=True)
-            # append new direction & point
-            self.problem.training_data(block_id, dir_orig_space, feasible_point)
-        return update_model
 
-    def hotellings_t2(self, X, x_n, df=3, n_components=5, alpha=0.05):
+            feasible_point, reduced_cost, primal_bound, _, \
+                is_new_point, column = self.global_solve_subproblem(block_id, dir_im_space)
+            # append new direction & point
+            dir_orig_space = \
+                self.problem.block_model.trans_into_orig_space(block_id,
+                                                               dir_im_space)
+            self.problem.training_data(block_id, dir_orig_space, feasible_point)
+
+        return update_model, feasible_point, reduced_cost, primal_bound, is_new_point, column
+
+    def hotellings_t2(self, X, x_n, n_components=5, alpha=0.05):
         '''
         :param direction: new direction (in original space)
         :type: ndarray
@@ -1251,12 +1278,13 @@ class RefactoryColGen:
         :type: integer
 
         '''
+
         n_components = np.minimum(n_components, X.shape[1])
-        X = X[:, 0:n_components]
+        X = X[:, 0:int(n_components)]
 
-        x_n = x_n[:, 0:n_components]
+        x_n = x_n[:, 0:int(n_components)]
         y_n = x_n
-
+        df = 3
         mean, var = np.mean(X), np.var(X)
         param = (mean, var)
         y_score = (y_n - mean) ** 2 / var
@@ -1278,12 +1306,16 @@ class RefactoryColGen:
         return y_proba, y_score, t2_bools, param
 
     def anomaly_detection(self, block_id, X, dir_orig_space):
-        scaler = StandardScaler().fit(X)
+        #get scaler from surrogate model
+        scale_dict = self.problem.sub_problems[block_id].get_scaler()
+        #scaler = StandardScaler().fit(X)
+        scaler = scale_dict[block_id]
         # scale all previous directions
         x_tr = scaler.transform(X)
         # scale new direction
         x_n = scaler.transform(dir_orig_space)
         # PCA init
+        #pca_model = self.problem.get_scaler()
         pca_model = {}
         pca_model[block_id] = PCA().fit(x_tr)
         # PCA all previous directions
@@ -1300,3 +1332,95 @@ class RefactoryColGen:
             else:
                 accumulated_var_ratio += explained_variance_ratio[n + 1]
         return T_tr, T_n, n_components
+
+    def write_text(self, block_id, score):
+
+        avg = score[0]
+        var = score[1]
+        current_time = time.ctime()
+        path = r"C:\Users\Finn Swonke\Documents\HAW\Semester 3\MP\Project\decogo\tests\solver\refactory_colgen\Results.txt"
+        if avg is not None:
+            with open(path, 'a') as f:
+                if block_id == 0:
+                    f.write('Time: ' + str(current_time)+'\n')
+                    f.write('CASE: 0/1/1'+'\n')
+
+                f.write(str(block_id))
+                f.write(", ")
+                f.write(str(avg))
+                f.write(", ")
+                f.write(str(var))
+                f.write(""+'\n')
+                f.close()
+
+    def ML_ColGen(self, block_id, direction, heuristic=True,
+                        approx_solver=False, x_ia=None):
+        """Generates the inner point (and corresponding column) either
+        with MINLP sub-problem or with NLP sub-problem (too heuristically);
+        adds valid local linear cut to heu_oa_master_problem if any
+
+        :param block_id: Block identifier
+        :type block_id: int
+        :param direction: Direction in image space
+        :type direction: ndarray
+        :param heuristic: Indicates if the sub-problem must be solved \
+        heuristically
+        :type heuristic: bool
+        :param approx_solver: enables approximate solving of subproblems in \
+        column generation
+        :type approx_solver: bool
+        :param x_k: start_point for solving subproblems
+        :type x_k: BlockVector or None
+        :return: Inner point, primal bound, reduced cost of new point, \
+        bool value indicating whether new point is generated and \
+        corresponding column
+        :rtype: tuple
+        """
+
+        if self.result.main_iterations == 0:
+            if approx_solver:  # approximate solve minlp subproblem
+                feasible_point, primal_bound, reduced_cost, is_new_point, \
+                 column = self.local_solve_subproblem(
+                    block_id, direction, x_k=x_ia[block_id, :])
+            else:
+                if self.settings.cg_generate_columns_with_nlp is True:
+                    feasible_point, primal_bound, reduced_cost, is_new_point, \
+                     column = self.local_solve_subproblem(block_id,
+                                                          direction,
+                                                          x_k=x_ia[block_id, :])
+                    if reduced_cost > -0.01:
+                        feasible_point, reduced_cost, primal_bound, _, \
+                         is_new_point, column = \
+                         self.global_solve_subproblem(
+                             block_id, direction, heuristic=heuristic)
+
+                else:
+                    feasible_point, reduced_cost, primal_bound, _, is_new_point, \
+                     column = self.global_solve_subproblem(
+                        block_id, direction, heuristic=heuristic)
+
+            reduced_cost = round(reduced_cost, 3)
+            dir_orig_space = \
+                self.problem.block_model.trans_into_orig_space(block_id,
+                                                               direction)
+            # store data for the ML-Model
+            self.problem.training_data(block_id, dir_orig_space, feasible_point)
+
+            # check, if get_size_training_data method works
+            len_data = self.problem.get_size_training_data(block_id)
+            print('length data: ', len_data, 'in block:', block_id)
+
+            self.ndata[block_id] = len_data
+        else:
+            bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
+
+            update_model, feasible_point, reduced_cost, primal_bound, \
+                is_new_point, column = self.eval_prediction(block_id=block_id, dir_im_space=direction,
+                                                            y_clf=bin_pred,
+                                                            x_ia=x_ia,
+                                                            binary_index=bin_index)
+            if update_model:
+                #upmodel += 1
+                self.init_ML(block_id)
+
+        return feasible_point, primal_bound, reduced_cost, is_new_point, column

@@ -978,14 +978,14 @@ class PyomoSubProblems(SubProblemsBase):
         self.proj_sub_problem.update_var_upper_bound(index)
         self.line_search_sub_problem.update_var_upper_bound(index)
 
-    def ml_sub_solver_init_train(self, block_id, training_data):
+    def ml_sub_solver_init_train(self, block_id, training_data, phase):
         """ initiates training of the surrogate model
         :param: block_id
         :type: int
         :param: training_data
         :type: dict
         """
-        return self.surrogate_model.init_train(block_id, training_data)
+        return self.surrogate_model.init_train(block_id, training_data, phase)
 
     def ml_sub_solver_test_init_train(self, block_id, training_data):
         """ tests the surrogate model, predicts feasible points from directions
@@ -996,33 +996,23 @@ class PyomoSubProblems(SubProblemsBase):
         """
         return self.surrogate_model.test_init_train(block_id, training_data)
 
-    def ml_sub_solver(self, block_id, direction, point, x_ia, result):
+    def ml_sub_solver(self, block_id, direction):
         '''
         :param: direction, dual solution from LP-IA Masterproblem
         :type:
         :param: x_ia, primal solution from LP-IA
+        :type: Block Vector
         :return: prediction, p_int
         :rtype:
         '''
         #prediction (ndarray), is primal solution to LP-IA Masterproblem, including the predicted binaries from Surrogate model
-        bin_pred, bin_glob, x_sg, bin_index = self.surrogate_model.sub_solve(block_id, direction, point, x_ia)
-        #print('=====================================================')
-        #print('     Starting NLP with predicted binaries            ')
-        #print('=====================================================')
-        #tilde_y, new_point_obj_val, dual_bound, sol_is_feasible = self.local_solve(result, direction, start_point=x_sg.flatten())
-        #print('tilde_y')
-        #print(tilde_y)
-        #print('point')
-        #print(point)
-        #print('new_point_obj_val')
-        #print(new_point_obj_val)
-        #print('dual bound')
-        #print(dual_bound)
-        return bin_pred, bin_glob, bin_index
+        bin_pred, bin_index = self.surrogate_model.sub_solve(block_id, direction)
 
-    def split_data(self, block_id, training_data, test=False):
+        return bin_pred, bin_index
 
-        return self.surrogate_model.split_data(block_id, training_data, test)
+    def split_data(self, block_id, training_data, test=False, shuffle_data=True):
+
+        return self.surrogate_model.split_data(block_id, training_data, test, shuffle_data)
 
     def get_scaler(self):
         return self.surrogate_model.scaler

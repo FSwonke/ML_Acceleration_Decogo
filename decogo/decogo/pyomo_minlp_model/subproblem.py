@@ -12,8 +12,11 @@ from pyomo.environ import Binary, Integers, Reals, SolverStatus, \
 from pyomo.opt import SolverFactory
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils import shuffle
 from tensorflow.keras.layers import Dense, Input
 from tensorflow.keras.models import Sequential
+import tensorflow as tf
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger('decogo')
 
@@ -102,8 +105,7 @@ class PyomoSubProblemBase(ABC):
         """
 
         if start_point is not None:
-            print('start_point')
-            print(start_point)
+
             for i in range(len(self.model.Y)):
                 self.model.Y[i + 1].value = start_point[i]
 
@@ -485,47 +487,71 @@ class SurrogateModel:
         self.scaler = {}
         self.test_split = 0.1
 
-    def init_train(self, block_id, training_data):
+    def init_train(self, block_id, training_data, phase):
         '''Method for initial training of the Surrogate Model
         :param: block_id
         :type: int
         :param: training_data
         :type: dict -> includes a list of tuples with corresponding directions and points for each block
         '''
-        print('============================================ ')
-        print('             initiated training              ')
-        print('============================================ ')
-        #self.clf_batch[block_id] = MLPClassifier(hidden_layer_sizes=(200, 200),
-                                                 #activation='relu',
-                                                 #max_iter=10000,
-                                                 #alpha=1e-5,
-                                                 #verbose = False,
-                                                 #solver = 'lbfgs')
-        # split training_data into input/output
-        X_train, y_train = self.split_data(block_id, training_data)
+        bin_index = self.binary_index[block_id]
+        if len(bin_index) > 0:
+            print('============================================ ')
+            print('             initiated training              ')
+            print('============================================ ')
 
-        self.clf_batch[block_id] = Sequential()
-        # self.clf_batch[block_id].add(Input(shape=(X.shape[1],),))
-        self.clf_batch[block_id].add(Dense(X_train.shape[1], input_dim=X_train.shape[1]))
-        self.clf_batch[block_id].add(Dense(50, activation='tanh'))
-        self.clf_batch[block_id].add(Dense(50, activation='softsign'))
-        self.clf_batch[block_id].add(Dense(y_train.shape[1], activation='sigmoid'))
-        self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adadelta')
+            # split training_data into input/output
+            X_train, y_train = self.split_data(block_id, training_data)
+            #portioning data
+            print('shape X_train: ', X_train.shape)
+            p_list = phase[0]
+            p = np.arange(p_list)
+            #p = np.arange(phase[0],phase[1])
+            X_train = np.delete(X_train, p, axis=0)
+            y_train = np.delete(y_train, p, axis=0)
+            print('shape X_train phase: ', X_train.shape)
+
+            if y_train.shape[1] < 6:
+                num_bin = 3
+            else:
+                num_bin = 3*y_train.shape[1]
+
+            self.clf_batch[block_id] = Sequential()
+
+            # Input Layer
+            self.clf_batch[block_id].add(Dense(X_train.shape[1], input_dim=X_train.shape[1]))
+
+            # Hidden Layer
+            self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
+            #self.clf_batch[block_id].add(Dense(num_bin, activation='softsign'))
+
+            # Output Layer
+            self.clf_batch[block_id].add(Dense(y_train.shape[1], activation='sigmoid'))
+
+            # Settings
+            self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adam',
+                                             metrics=[tf.keras.metrics.Accuracy()])
 
 
-        #scale data (standardize)
-        self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
-        X_scaled = self.scaler[block_id].transform(X_train)
+            #scale data (standardize)
+            self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
+            X_scaled = self.scaler[block_id].transform(X_train)
 
-        print('fit model to block:', block_id)
-        print('y_train (output)')
-        #print(y_train)
-        print('shape training data')
-        print('X')
-        print(X_train.shape)
-        print('y')
-        print(y_train.shape)
-        self.clf_batch[block_id].fit(X_scaled, y_train, epochs=500, verbose=0)
+            print('fit model to block:', block_id)
+            model = self.clf_batch[block_id].fit(X_scaled, y_train, epochs=600, verbose=0)
+
+            #Plot training progress
+            plt.figure(figsize=(7, 5), dpi=200)
+            plt.title('Block_'+str(block_id))
+            plt.plot(model.history['loss'], label='Loss')
+            plt.plot(model.history['accuracy'], label='Accuracy')
+            plt.legend()
+            plt.xlabel('epochs')
+            #plt.ylim(0, 1)
+            plt.grid()
+            plt.savefig('Acc&Loss_block_'+str(block_id))
+        else:
+            print('no binary variables in block', block_id)
 
     def predict(self, block_id, X, y = None):
         '''Method for prediction of feasible points with Surrogate MOdel
@@ -538,14 +564,8 @@ class SurrogateModel:
         transformed_direction = self.scaler[block_id].transform(X)
         # predict method
         pred = self.clf_batch[block_id].predict(transformed_direction)
+        # rounding
         prediction = np.around(pred)
-        # inverse transform
-        #inversetransform_pred = self.scaler[block_id].inverse_transform(prediction)
-        #score returns mean accuracy of the model
-
-
-
-        #score = self.clf_batch[block_id].score(X, y)
 
         return prediction
 
@@ -561,28 +581,25 @@ class SurrogateModel:
         :rtype: list
         '''
         print('============================================ ')
-        print('    initiated testing block', block_id,'     ')
+        print('            testing block', block_id, '      ')
         print('============================================ ')
         test = True
         X_test, y_test = self.split_data(block_id, training_data, test)
         index = self.binary_index[block_id]
-        #point = np.take(feasible_point, index)
 
+        if len(index) > 0:
+            prediction = self.predict(block_id, X_test, y_test)
+            score = self.get_score(prediction, y_test)
 
+            return prediction, y_test, score
+        else:
+            prediction = None
+            y_test = None
+            score = None
 
-        prediction = self.predict(block_id, X_test, y_test)
-        print('shape y_test')
-        print(y_test.shape)
-        #print('y_test (validation)')
-        #print(y_test)
-        #print('Prediction')
-        #print(prediction)
-        #print('score')
-        #print(score)
+            return prediction, y_test, score
 
-        return prediction, y_test
-
-    def split_data(self, block_id, training_data, test=False):
+    def split_data(self, block_id, training_data, test=False, shuffle_data=True):
         """
         :param:
         """
@@ -613,10 +630,12 @@ class SurrogateModel:
             X = X[n_train:X.shape[0], :]
             y = y[n_train:y.shape[0], :]
 
+        if shuffle_data:
+            X, y = shuffle(X, y, random_state=0)
 
         return X, y
 
-    def sub_solve(self, block_id, direction, point, x_ia):
+    def sub_solve(self, block_id, direction):
         """ takes direction to predict binaries; takes point from for comparing prediction & solution
         :param: block_id
         :type: int
@@ -631,35 +650,11 @@ class SurrogateModel:
         print('    sub solve block', block_id, '            ')
         print('============================================ ')
 
-
-
         index = self.binary_index[block_id]
-        print('list of binaries in block', block_id)
-        print(index)
-        x = x_ia[block_id, :]
-        print('============')
-        print('     x      ')
-        print('shape: ', x.shape, 'type:', type(x))
 
-        bin_glob = np.zeros((1, len(index)))
-        i = 0
-        for idx in index:
-            #x[idx] = round()
-            bin_glob[0, i] = round(point[idx])
-            i += 1
-
-        print('feasible point from Global Subsolver')
-        print(bin_glob)
-
-        print('prediction:')
         pred = self.predict(block_id, np.array([direction]))
-        print(pred)
+
         bin_pred = pred.flatten()
-        # build complete vector (point) with continuous variables from nlp solver and binaries from surrogate model
-        j = 0
-        for idx in index:
-            x[idx] = bin_pred[j]
-            j += 1
 
         '''
         :param: prediction, only binaries (predicted)
@@ -667,4 +662,22 @@ class SurrogateModel:
         :param: x, complete vector (binaries & continuous) with predicted
         :param: point, point from global sub solver
         '''
-        return bin_pred, bin_glob, x, index
+        return bin_pred, index
+
+    def get_score(self, prediction, test):
+        '''computes a average score of the predictions
+        :param
+        '''
+        l = []
+        for i in range(prediction.shape[0]):
+            positiv = 0
+            for j in range(prediction.shape[1]):
+                if prediction[i, j] == test[i, j]:
+                    positiv += 1
+            if prediction.shape[1] > 0:
+                score = positiv / prediction.shape[1]
+                l.append(score)
+        score_arr = np.array(l)
+        score_mean = np.mean(score_arr)
+        score_var = np.var(score_arr)
+        return (score_mean, score_var)
