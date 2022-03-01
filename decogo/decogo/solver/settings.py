@@ -25,7 +25,8 @@ _setting_names_default_val = \
      'gurobi_settings': [('NumericFocus', 1), ('Method', 1)],
 
      # general
-     'strategy': 'CG',  # strategy for solver; can be 'OA' or 'CG' or 'ADAPTCG'
+     'strategy': 'CG',  # strategy for solver; can be 'OA' or 'CG' or
+     # 'ADAPTCG' or 'DynCG'
      'maxtime': 1e10,  # maximum running time for the solver in seconds
      'logger_level': 'info',  # 'debug' - detailed info about solution
      # process, 'info' - only important information
@@ -47,7 +48,7 @@ _setting_names_default_val = \
      'cg_min_inner_point_distance': 1e-5,  # minimum distance to inner points
      'cg_generate_columns_with_nlp': False,  # True - try to generate columns
      # with NLP solver, False - with MINLP solver
-     'cg_max_iter': 50,  # maximum number of iteration during CG
+     'cg_max_iter': 15,  # maximum number of iteration during CG
      'cg_add_local_cut': True,  # indicates if to add a local cut when solving
      # CG subproblem
      'cg_sub_gradient_max_iter': 5,  # maximum number of subgradient iterations
@@ -58,7 +59,7 @@ _setting_names_default_val = \
      # the main iteration
      'cg_fast_fw': True,  # to use fast fw cg instead of approx cg in start
      'cg_fast_approx': True,  # to use approx subproblem solving in fast cg
-     'cg_find_solution': True,  # switch on or off find heuristics
+     'cg_find_solution': True,  # switch on or off find solution heuristics
      'cg_find_sol_mip_pool': 100,  # to set num of solution pool in
      # solving mip proj prob
      'cg_find_sol_mip_pool_tau': 0.5,  # to set value of tau for local
@@ -66,7 +67,11 @@ _setting_names_default_val = \
      'cg_find_sol_mip_pool_max_round': 5,  # to set max iteration of
      # local search
 
-     # ADAPTCG
+     # Refactory for FW/CG
+     'user_defined_input_model': False,  # switch on/off user-defined input
+     # model
+
+     # Dyn-cg
      'block_agg_option': 'successive',  # select the strategy of block
      # aggregation; can be 'successive' or 'random'
      # or 'viol_copy_constr'
@@ -74,8 +79,29 @@ _setting_names_default_val = \
      # that are aggregated in a single
      # aggregated block
      'min_num_atomic_block_in_agg_block': 1,  # minimum number of atomic blocks
-     # that are aggregated in a single
-     # aggregated block
+     'num_hyper_block_per_iter': 1,   # maximum number of hyper blocks created
+     # per iteration
+     'max_size_hyper_block': 2,  # maximum number of atomic blocks that are
+     # combined in a single hyper block
+     'hyper_block_mip_pool': 1,  # to set num of solution pool in
+     # solving mip proj prob for hyper/agg sub-problems
+     'creat_hyper_block_test': False,  # to test fast cg for fixed hyper blocks
+     'standard_cg': False,  # to run standard cg at end of fast cg iterations
+     'max_iter_fast_cg_init': 15,  # maximum iteration number for
+     # fast cg for atomic blocks
+     'max_iter_fast_cg_hyper': 5,  # maximum iteration number for
+     # fast cg for hyper blocks
+     'max_iter_fast_cg_active': 3,  # maximum iteration number for
+     # fast cg for active blocks
+     'max_iter_standard_cg': 5,  # maximum iteration number for
+     # fast cg for active blocks
+
+     # ml-based acceleration
+     'exact_solve_data': True,  # enable sub_problem data with exact solver
+     # ml on
+     'activate_ml_colgen': True,     # activates ml_colgen
+     # if true
+
      }
 
 
@@ -106,7 +132,6 @@ class Settings:
         """Reads non-default settings from file decogo.set
         (located in the working directory). The file should should be in the
         following form:
-
         setting1 = value1
         setting2 = value2
         """
@@ -162,14 +187,13 @@ class Settings:
     def _validate_non_default_settings(self, settings):
         """Validates nondefault settings, i.e. checks if the values of the
         settings are in the right form
-
         :param settings: Dictionary of settings
         :type settings: dict
         :raises ValueError: Invalid for value for some setting
         """
         for key in settings:
             if key == 'strategy':
-                if settings[key] not in ['OA', 'CG', 'ADAPTCG']:
+                if settings[key] not in ['OA', 'CG', 'ADAPTCG', 'DynCG']:
                     raise ValueError(
                         'Invalid value for setting \'{0}\'. '
                         'It must be a string.'.format(key))
@@ -198,7 +222,6 @@ class Settings:
 
     def get_minlp_solver_options(self):
         """Gets MINLP solver options
-
         :return: List of nondefault options for external solver
         :rtype: list
         """
@@ -211,7 +234,6 @@ class Settings:
 
     def get_nlp_solver_options(self):
         """Gets NLP solver options
-
         :return: List of nondefault options for external solver
         :rtype: list
         """
@@ -224,7 +246,6 @@ class Settings:
 
     def get_lp_solver_options(self):
         """Gets NLP solver options
-
         :return: List of nondefault options for external solver
         :rtype: list
         """

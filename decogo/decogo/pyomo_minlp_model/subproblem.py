@@ -10,10 +10,10 @@ from pyomo.core.expr.visitor import identify_variables, replace_expressions
 from pyomo.environ import Binary, Integers, Reals, SolverStatus, \
     TerminationCondition
 from pyomo.opt import SolverFactory
-from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import shuffle
-from tensorflow.keras.layers import Dense, Input
+from tensorflow.keras.layers import Dense, Input, Dropout
 from tensorflow.keras.models import Sequential
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -486,8 +486,10 @@ class SurrogateModel:
         self.binary_index = binary_index
         self.scaler = {}
         self.test_split = 0.1
+        self.X_train = {}
+        self.y_train = {}
 
-    def init_train(self, block_id, training_data, phase):
+    def init_train(self, block_id, training_data, phase, test_size):
         '''Method for initial training of the Surrogate Model
         :param: block_id
         :type: int
@@ -501,20 +503,34 @@ class SurrogateModel:
             print('============================================ ')
 
             # split training_data into input/output
-            X_train, y_train = self.split_data(block_id, training_data)
-            #portioning data
-            print('shape X_train: ', X_train.shape)
+            X, y = self.split_data(block_id, training_data)
+            self.test_split = test_size
+            if len(bin_index) < 3:
+                self.test_split = 0.6
+                epochs = 900
+            else:
+                self.test_split = 0.4
+                epochs = 450
+            # portioning data
             p_list = phase[0]
             p = np.arange(p_list)
-            #p = np.arange(phase[0],phase[1])
-            X_train = np.delete(X_train, p, axis=0)
-            y_train = np.delete(y_train, p, axis=0)
-            print('shape X_train phase: ', X_train.shape)
 
+            X = np.delete(X, p, axis=0)
+            y = np.delete(y, p, axis=0)
+            print('shape X_train phase: ', X.shape)
+
+            # seperate to train & test set (training set is last added data
+            X_test, X_train, y_test, y_train = train_test_split(X, y, test_size=1-self.test_split,
+                                                                shuffle=False)
+
+
+
+            # set up number of neurons
             if y_train.shape[1] < 6:
-                num_bin = 3
+                num_bin = 5
             else:
-                num_bin = 3*y_train.shape[1]
+                num_bin = 5*y_train.shape[1]
+            print('Hidden Layers: ', num_bin, '+', num_bin)
 
             self.clf_batch[block_id] = Sequential()
 
@@ -523,7 +539,9 @@ class SurrogateModel:
 
             # Hidden Layer
             self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
-            #self.clf_batch[block_id].add(Dense(num_bin, activation='softsign'))
+            self.clf_batch[block_id].add(Dropout(rate=0.5))
+            #self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
+            #self.clf_batch[block_id].add(Dropout(rate=0.5))
 
             # Output Layer
             self.clf_batch[block_id].add(Dense(y_train.shape[1], activation='sigmoid'))
@@ -532,13 +550,13 @@ class SurrogateModel:
             self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adam',
                                              metrics=[tf.keras.metrics.Accuracy()])
 
-
             #scale data (standardize)
             self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
             X_scaled = self.scaler[block_id].transform(X_train)
-
+            self.X_train[block_id] = X_train
+            self.y_train[block_id] = y_train
             print('fit model to block:', block_id)
-            model = self.clf_batch[block_id].fit(X_scaled, y_train, epochs=600, verbose=0)
+            model = self.clf_batch[block_id].fit(X_scaled, y_train, epochs=epochs, verbose=0)
 
             #Plot training progress
             plt.figure(figsize=(7, 5), dpi=200)
@@ -605,7 +623,6 @@ class SurrogateModel:
         """
         #list of binary indexes for a given block
         index = self.binary_index[block_id]
-
 
         blockdata = training_data[block_id]
         y = np.zeros((len(blockdata), len(index)))
@@ -681,3 +698,26 @@ class SurrogateModel:
         score_mean = np.mean(score_arr)
         score_var = np.var(score_arr)
         return (score_mean, score_var)
+
+    def update_model(self, block_id, training_data):
+        '''
+        update Surrogate Model with new data only
+        :param
+        '''
+        print('')
+        print('>>>>>Updating<<<<<')
+        print('')
+        X, y = self.split_data(block_id, training_data, shuffle_data=False)
+        X_last = X[-1, :].reshape(1, -1)
+        y_last = y[-1, :].reshape(1, -1)
+
+        self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adam',
+                                         metrics=[tf.keras.metrics.Accuracy()])
+        self.clf_batch[block_id].fit(X_last, y_last, epochs=50, verbose=0)
+
+    def add_train_data(self, block_id, training_data):
+        X, y = self.split_data(block_id, training_data, shuffle_data=False)
+        last_X = X[-1, :].reshape(1, -1)
+        last_y = y[-1, :].reshape(1, -1)
+        self.X_train[block_id] = np.concatenate((self.X_train[block_id], last_X), axis=0)
+        self.y_train[block_id] = np.concatenate((self.y_train[block_id], last_y), axis=0)
