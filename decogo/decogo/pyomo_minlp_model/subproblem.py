@@ -488,8 +488,10 @@ class SurrogateModel:
         self.test_split = 0.1
         self.X_train = {}
         self.y_train = {}
+        self.X_validation = {}
+        self.y_validation = {}
 
-    def init_train(self, block_id, training_data, phase, test_size):
+    def init_train(self, block_id, training_data, phase, train_set):
         '''Method for initial training of the Surrogate Model
         :param: block_id
         :type: int
@@ -503,33 +505,29 @@ class SurrogateModel:
             print('============================================ ')
 
             # split training_data into input/output
-            X, y = self.split_data(block_id, training_data)
-            self.test_split = test_size
-            if len(bin_index) < 3:
-                self.test_split = 0.6
-                epochs = 900
-            else:
-                self.test_split = 0.4
-                epochs = 450
+            X, y = self.split_data(block_id, training_data, shuffle_data=False)
+
+
             # portioning data
             p_list = phase[0]
             p = np.arange(p_list)
 
-            X = np.delete(X, p, axis=0)
-            y = np.delete(y, p, axis=0)
-            print('shape X_train phase: ', X.shape)
+            #X = np.delete(X, p, axis=0)
+            #y = np.delete(y, p, axis=0)
+
+            # settings for NN depending on number of binaries
+            num_bin = min(30, 5*len(bin_index))
+            epochs = min(1000, 50*len(bin_index)+300)
+
+            #train_set += min(round(X.shape[0]*0.8)-train_set, len(bin_index)*5)
+            train_ratio = round(train_set / X.shape[0], 1)
 
             # seperate to train & test set (training set is last added data
-            X_test, X_train, y_test, y_train = train_test_split(X, y, test_size=1-self.test_split,
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_ratio,
                                                                 shuffle=False)
+            self.X_validation[block_id] = X_test
+            self.y_validation[block_id] = y_test
 
-
-
-            # set up number of neurons
-            if y_train.shape[1] < 6:
-                num_bin = 5
-            else:
-                num_bin = 5*y_train.shape[1]
             print('Hidden Layers: ', num_bin, '+', num_bin)
 
             self.clf_batch[block_id] = Sequential()
@@ -553,8 +551,11 @@ class SurrogateModel:
             #scale data (standardize)
             self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
             X_scaled = self.scaler[block_id].transform(X_train)
+            # add to attributes
             self.X_train[block_id] = X_train
             self.y_train[block_id] = y_train
+            #self.X_validation[block_id] = X_test
+            #self.y_validation[block_id] = y_test
             print('fit model to block:', block_id)
             model = self.clf_batch[block_id].fit(X_scaled, y_train, epochs=epochs, verbose=0)
 

@@ -36,6 +36,7 @@ class RefactoryColGen:
         self.result = result
         self.settings = settings
 
+        self.alpha = None
         self.n_subproblems_main = {}
         self.phase_list = {}
         self.newpoints = {}
@@ -46,6 +47,8 @@ class RefactoryColGen:
         self.anomaly = {}
         self.y_score = {}
         self.a_threshold = {}
+        self.spe_theshold = {}
+        self.spe_threshold = {}
         self.x_ia = {}
         self.X_main_plot = {}
         self.PC_tr = {}
@@ -64,7 +67,8 @@ class RefactoryColGen:
             self.anomaly[k] = []
             self.n_subproblems_main[k] = 1
             self.y_score[k] = None
-            self.a_threshold[k] = []
+            self.a_threshold[k] = None
+            self.spe_threshold[k] = None
             self.x_ia[k] = []
             self.X_main_plot[k] = []
             self.PC_main[k] = None
@@ -407,6 +411,7 @@ class RefactoryColGen:
             #print('corrections: ', self.corrections[k])
             #print('val set', self.y_main[k])
             #self.plot_main(k)
+        #self.plot_train_data()
         self.testing()
 
     def ia_init(self, duals=None):
@@ -1141,10 +1146,10 @@ class RefactoryColGen:
         for k in range(self.problem.block_model.num_blocks):
             logger.info('block {0}: {1}'.format(k, non_zero_z[k]))
 
-    def init_ML(self, block_id, test_size):
+    def init_ML(self, block_id, train_set):
         training_data = self.problem.get_training_data()
         phase = self.phase_list[block_id]
-        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data, phase, test_size)
+        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data, phase, train_set)
 
     def update_Surrogate_Model(self, block_id):
         training_data = self.problem.get_training_data()
@@ -1283,14 +1288,15 @@ class RefactoryColGen:
 
         # get previous directions by splitting in- and outputs
         #X, y = self.problem.sub_problems[block_id].split_data(block_id, training_data)
-        X_train, y_train = self.problem.sub_problems[block_id].get_training_data(block_id)
+        X_train, y_train, X_test, y_test = self.problem.sub_problems[block_id].get_training_data(block_id)
         # scaler = self.problem.sub_problems[block_id].get_scaler
         # call anomaly detection (Scaling and PCA)
         T_tr, T_n, n_components = self.anomaly_detection(block_id, X_train, dir_orig_space)
         print('shape X_train', X_train.shape)
         print('shape T_tr', T_tr.shape)
         # hotellings_t2 test
-        alpha = 0.85
+        #alpha = 0.85
+        alpha = self.alpha
         df = 1
         t2_bools = self.hotellings_t2(block_id=block_id, T=T_tr, x_n=T_n, n_components=n_components, alpha=alpha, df=df)
         # SPE (Squared Prediction Error)
@@ -1385,7 +1391,7 @@ class RefactoryColGen:
         # score of training data
         T_score = (T - mean) ** 2 / var
         self.t_score[block_id] = T_score
-        # score of the new direction
+        # score of the new direction normalized value of score
         y_score = (y_n - mean) ** 2 / var
 
         anomaly_score_threshold = stats.chi2.ppf(q=(1 - alpha), df=df)
@@ -1407,22 +1413,23 @@ class RefactoryColGen:
         else:
             self.y_score[block_id] = np.concatenate((self.y_score[block_id], y_score), axis=0)
 
-        self.a_threshold[block_id].append(anomaly_score_threshold)
+        self.a_threshold[block_id] = anomaly_score_threshold
         return t2_bools
 
     def spe(self, block_id, T, t_n, n_components):
         """ calculate spe (pca) and detect anomaly"""
         x_dim = T.shape[1]
         if n_components < x_dim:
+
             T_tilde = T[:, 0:self.PC_main[block_id].shape[1]]
-            t_n_tilde = t_n[:, 0:self.PC_main[block_id].shape[1]]
             spe = np.sum(T_tilde * T_tilde, axis=1)
             spe2over3 = np.cbrt(spe * spe)
             mean, std = np.mean(spe2over3), np.std(spe2over3)
-
+            spe_threshold = np.power(mean + std, 3)
+            self.spe_threshold[block_id] = spe_threshold
+            t_n_tilde = t_n[:, 0:self.PC_main[block_id].shape[1]]
             spe_n = np.sum(t_n_tilde * t_n_tilde, axis=1)
 
-            spe_threshold = np.power(mean + std, 3)
             spe_bool = spe_n > spe_threshold
             self.spe_main[block_id] = spe
 
@@ -1597,7 +1604,7 @@ class RefactoryColGen:
                                                                direction)
             self.X_main_plot[block_id].append((self.n_subproblems_main[block_id], dir_orig_space))
             # collect x_ia in main iteration
-            self.x_ia[block_id].append((self.n_subproblems_main[block_id], x_ia))
+
             self.n_subproblems_main[block_id] += 1
             # ml sub solve
             '''
@@ -1612,212 +1619,230 @@ class RefactoryColGen:
                 #self.init_ML(block_id)
                 #self.update_Surrogate_Model(block_id)
             '''
+        len_data = self.problem.get_size_training_data(block_id)
+        self.x_ia[block_id].append((len_data, x_ia))
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
-    def plot_main(self, block_id):
-        if len(self.newpoints[block_id]) != 0:
-            # init array with iteration steps
+    def plot_main(self, block_id, exp_type):
+        #if len(self.newpoints[block_id]) != 0:
+        # init array with iteration steps
 
-            # get number of binary variables
-            n_bins = self.newpoints[block_id][0][1].shape[0]
-            # get training data
-            X_train, y_train = self.problem.sub_problems[block_id].get_training_data(block_id)
-            n_train = X_train.shape[0]
-            iter_train = np.arange(n_train)
-            # initiate dict´s for storing components of points in lists
-            y_np = {}
-            y_pred = {}
-            y_corr = {}
-            y_val = {}
-            X_val = {}
+        # get number of binary variables
+        bin_index = self.problem.sub_problems[block_id].binary_index[block_id]
+        n_bins = len(bin_index)
+        # get training data
+        X_train, y_train, X_test, y_test = self.problem.sub_problems[block_id].get_training_data(block_id)
+        n_train = X_train.shape[0]
+        iter_train = np.arange(n_train)
+        # initiate dict´s for storing components of points in lists
+        y_np = {}
+        y_pred = {}
+        y_corr = {}
+        y_val = {}
+        X_val = {}
+        for k in range(n_bins):
+            y_np[k] = []
+            y_pred[k] = []
+            y_corr[k] = []
+            y_val[k] = []
+
+        k=0
+        for k in range(X_train.shape[1]):
+            X_val[k] = []
+        k=0
+        iter_npoint = []
+        iter_pred = []
+        iter_corr = []
+        iter_val = []
+        iter_anomaly = []
+
+        for i in range(len(self.newpoints[block_id])):
+            iter_npoint.append(self.newpoints[block_id][i][0])
             for k in range(n_bins):
-                y_np[k] = []
-                y_pred[k] = []
-                y_corr[k] = []
-                y_val[k] = []
+                y_np[k].append(self.newpoints[block_id][i][1][k])
+        i=0
+        k=0
+        for i in range(len(self.predictions[block_id])):
+            iter_pred.append(self.predictions[block_id][i][0])
+            for k in range(n_bins):
+                y_pred[k].append(self.predictions[block_id][i][1][k])
+        i=0
+        k=0
+        for i in range(len(self.corrections[block_id])):
+            iter_corr.append(self.corrections[block_id][i][0])
+            for k in range(n_bins):
+                y_corr[k].append(self.corrections[block_id][i][1][k])
+        k=0
+        i=0
+        for i in range(len(self.y_main[block_id])):
+            iter_val.append(self.y_main[block_id][i][0])
+            for k in range(n_bins):
+                y_val[k].append(self.y_main[block_id][i][1][k])
+        k=0
+        i=0
+        for i in range(len(self.anomaly[block_id])):
+            iter_anomaly.append(self.anomaly[block_id][i])
+        k=0
+        i=0
+        # get scaler from surrogate model
+        scale_dict = self.problem.sub_problems[block_id].get_scaler()
+        # scaler = StandardScaler().fit(X)
+        scaler = scale_dict[block_id]
 
-            k=0
-            for k in range(X_train.shape[1]):
-                X_val[k] = []
-            k=0
-            iter_npoint = []
-            iter_pred = []
-            iter_corr = []
-            iter_val = []
-            iter_anomaly = []
+        for i in range(len(self.X_main_plot[block_id])):
+            for k in range(self.X_main_plot[block_id][i][1].shape[0]):
 
-            for i in range(len(self.newpoints[block_id])):
-                iter_npoint.append(self.newpoints[block_id][i][0])
-                for k in range(n_bins):
-                    y_np[k].append(self.newpoints[block_id][i][1][k])
-            i=0
-            k=0
-            for i in range(len(self.predictions[block_id])):
-                iter_pred.append(self.predictions[block_id][i][0])
-                for k in range(n_bins):
-                    y_pred[k].append(self.predictions[block_id][i][1][k])
-            i=0
-            k=0
-            for i in range(len(self.corrections[block_id])):
-                iter_corr.append(self.corrections[block_id][i][0])
-                for k in range(n_bins):
-                    y_corr[k].append(self.corrections[block_id][i][1][k])
-            k=0
-            i=0
+                X_val[k].append(self.X_main[block_id][i][1][k])
+
+
+        # scale all previous directions
+        #x_tr = scaler.transform(X)
+
+        i=0
+        # get scores of training data
+        T_scores = self.t_score[block_id]
+
+        scores = []
+        anomalies = []
+        corr_true = []
+        #print(y_val)
+        #print(y_pred)
+        for k in range(n_bins):
+            positiv = 0
+            anomaly_hit = 0
+            corr_hit = 0
             for i in range(len(self.y_main[block_id])):
-                iter_val.append(self.y_main[block_id][i][0])
-                for k in range(n_bins):
-                    y_val[k].append(self.y_main[block_id][i][1][k])
-            k=0
+                if y_val[k][i] == y_pred[k][i]:
+                    positiv += 1
+                else:
+                    # list with subprblems in which anomaly occured
+                    if i in iter_anomaly:
+                        anomaly_hit += 1
             i=0
-            for i in range(len(self.anomaly[block_id])):
-                iter_anomaly.append(self.anomaly[block_id][i])
-            k=0
-            i=0
-            # get scaler from surrogate model
-            scale_dict = self.problem.sub_problems[block_id].get_scaler()
-            # scaler = StandardScaler().fit(X)
-            scaler = scale_dict[block_id]
+            '''
+            for idx, i in enumerate(iter_corr):
+                
+                # count corrections which are equal to validation
+                if self.corrections[block_id][idx][0] == self.y_main[block_id][i][0]:
 
-            for i in range(len(self.X_main_plot[block_id])):
-                for k in range(self.X_main_plot[block_id][i][1].shape[0]):
+                    if y_corr[k][idx] == y_val[k][i]:
+                        corr_hit += 1
+                #i += 1
 
-                    X_val[k].append(self.X_main[block_id][i][1][k])
+            corr_true.append(corr_hit)
+            '''
+            acc_s = round(positiv/len(y_val[k]), 2)
+            acc_a = anomaly_hit
+            scores.append(acc_s)
+            anomalies.append(acc_a)
+        train_scores = []
+        print('y_train shape',y_train.shape)
+
+        bin_preds = self.sub_solve_train(block_id)
+        print('bin_pred shape', bin_preds.shape)
+        for j in range(y_train.shape[1]):
+            positiv = 0
+            for i in range(y_train.shape[0]):
+                if bin_preds[i, j] == y_train[i, j]:
+                    positiv += 1
+
+            acc_t = round(positiv/y_train.shape[0],2)
+            train_scores.append(acc_t)
 
 
-            # scale all previous directions
-            #x_tr = scaler.transform(X)
+        if n_bins < 3:
+            plt.figure(figsize=(12, 3), tight_layout=True)
+        else:
+            plt.figure(figsize=(12, 16), tight_layout=True)
 
-            print('n val', len(self.y_main[block_id]))
-            print('n pred', len(self.predictions[block_id]))
-            print('anomalies', self.anomaly[block_id])
-            i=0
-            # get scores of training data
-            T_scores = self.t_score[block_id]
+        for i in range(n_bins):
 
-            scores = []
-            anomalies = []
-            corr_true = []
-            #print(y_val)
-            #print(y_pred)
-            for k in range(n_bins):
-                positiv = 0
-                anomaly_hit = 0
-                corr_hit = 0
-                for i in range(len(self.y_main[block_id])):
-                    if y_val[k][i] == y_pred[k][i]:
-                        positiv += 1
-                    else:
-                        # list with subprblems in which anomaly occured
-                        if i in iter_anomaly:
-                            anomaly_hit += 1
-                i=0
-                '''
-                for idx, i in enumerate(iter_corr):
-                    
-                    # count corrections which are equal to validation
-                    if self.corrections[block_id][idx][0] == self.y_main[block_id][i][0]:
+            plt.subplot(n_bins + 1, 1, i + 1)
+            plt.plot(np.array(iter_train), bin_preds[:, i], 'm*')
+            plt.plot(np.array(iter_val)+n_train, np.array(y_val[i]), 'r--', label='Validation', alpha=0.6)
+            plt.plot(np.array(iter_pred)+n_train, np.array(y_pred[i]), 'm*', label='Prediction')
+            plt.vlines(np.array(iter_anomaly)+n_train, ymin=0, ymax=1, color='lime', alpha=0.5, label='Anomaly')
+            #plt.plot(np.array(iter_npoint)+n_train, np.array(y_np[i]), 'g>', label='New Point', alpha=0.4)
+            #plt.plot(np.array(iter_corr)+n_train, np.array(y_corr[i]), 'ro', label='Correction', alpha=0.4)
+            plt.plot(iter_train, y_train[:, i], 'b--', label='Training')
+            plt.ylim(ymin=-.08, ymax=1.08)
+            plt.title('y[' + str(i) + ']; Acc_Val: ' + str(scores[i]) + ' Acc_Train: ' + str(train_scores[i]) +
+                      '; ' + str(anomalies[i]) + '/'+ str(len(iter_anomaly)) + ' anomalies /w False Pred; '
+                    'Train_Data: '+str(len(iter_train)) + ' Test_Data: '+str(len(iter_val))) #+
+                      #str(corr_true[i])+'/'+str(len(iter_corr))+'Corrections right')
+            plt.xlabel('subproblems')
+            plt.grid()
+        plt.legend(loc='upper left')#bbox_to_anchor=(0.5,-0.5))
+        plt.savefig('eval_Block_['+str(block_id)+']_'+str(exp_type) +'.png', dpi=300)
 
-                        if y_corr[k][idx] == y_val[k][i]:
-                            corr_hit += 1
-                    #i += 1
 
-                corr_true.append(corr_hit)
-                '''
-                acc_s = round(positiv/len(y_val[k]), 2)
-                acc_a = anomaly_hit
-                scores.append(acc_s)
-                anomalies.append(acc_a)
-            #print('scores: ', scores)
-            if n_bins < 3:
-                plt.figure(figsize=(12, 3), tight_layout=True)
+
+        # plotting training data directions and points only for blocks with 1 binary variable
+        plot = True
+        if plot:
+            if n_bins > 1:
+                plt.figure(figsize=(40, 18), tight_layout=True)
             else:
-                plt.figure(figsize=(12, 16), tight_layout=True)
+                plt.figure(figsize=(12, 10), tight_layout=True)
+            # directions (X)
+            for i in range(X_train.shape[1]):
+                ax = plt.subplot(X_train.shape[1] + 1, 2, 2 * i + 1)
+                plt.grid()
+                plt.plot(np.array(iter_train), X_train[:, i], 'b--', label='Training')
+                ax.twinx()
+                plt.plot(np.array(iter_val)+n_train, np.array(X_val[i]), 'r--', label='Validation')
+                #plt.vlines(np.array(iter_anomaly) + n_train, ymin=0, ymax=1, color='lime', alpha=0.5,
+                           #label='Anomaly')
+                #
+                #plt.plot(np.array(iter_val)+n_train, np.array(self.y_score[block_id][:, i]), 'm+', label='max. y_score', alpha=0.5)
+                #plt.plot(np.array(iter_val) + n_train, np.array(self.a_threshold[block_id]), 'k_', label='anomaly_threshold')
+                plt.title('d[' + str(i) + ']')
+                plt.xlabel('subproblems')
+                #plt.yscale('log')
 
-            for i in range(n_bins):
-
-                plt.subplot(n_bins + 1, 1, i + 1)
-
-                plt.plot(np.array(iter_val)+n_train, np.array(y_val[i]), 'r--', label='Validation', alpha=0.6)
-                plt.plot(np.array(iter_pred)+n_train, np.array(y_pred[i]), 'm*', label='Prediction')
-                plt.vlines(np.array(iter_anomaly)+n_train, ymin=0, ymax=1, color='lime', alpha=0.5, label='Anomaly')
-                plt.plot(np.array(iter_npoint)+n_train, np.array(y_np[i]), 'g>', label='New Point', alpha=0.4)
-                plt.plot(np.array(iter_corr)+n_train, np.array(y_corr[i]), 'ro', label='Correction', alpha=0.4)
+            plt.legend()
+            # points
+            for i in range(y_train.shape[1]):
+                plt.subplot(y_train.shape[1] + 1, 2, 2 * i + 2)
                 plt.plot(iter_train, y_train[:, i], 'b--', label='Training')
-                plt.ylim(ymin=-.08, ymax=1.08)
-                plt.title('y[' + str(i) + ']; Accuracy: ' + str(scores[i]) +
-                          '; ' + str(anomalies[i]) + '/'+ str(len(iter_anomaly)) + ' anomalies /w False Pred; ') #+
-                          #str(corr_true[i])+'/'+str(len(iter_corr))+'Corrections right')
+                plt.plot(np.array(iter_val)+n_train, np.array(y_val[i]), 'r--', label='Validation')
+                plt.vlines(np.array(iter_anomaly) + n_train, ymin=0, ymax=1, color='lime', alpha=0.5,
+                           label='Anomaly')
+                plt.title('y[' + str(i) + ']')
                 plt.xlabel('subproblems')
                 plt.grid()
-            plt.legend()#bbox_to_anchor=(0.5,-0.5))
-            plt.savefig('eval_Block_['+str(block_id)+']', dpi=300)
+            plt.legend()
+            plt.savefig('Block_[' + str(block_id) + '] Training_Data '+str(exp_type)+'.png', dpi=500)
+        #'''
+        plot = True
 
+        if plot:
 
+            n_components = self.PC_main[block_id].shape[1]
+            plt.figure(figsize=(25, 6*n_components), tight_layout=True)
 
-            # plotting training data directions and points only for blocks with 1 binary variable
+            n_samples = self.PC_main[block_id].shape[0]
+            for i in range(n_components):
 
-            if True:
-                if n_bins > 1:
-                    plt.figure(figsize=(40, 18), tight_layout=True)
-                else:
-                    plt.figure(figsize=(12, 10), tight_layout=True)
-                # directions (X)
-                for i in range(X_train.shape[1]):
-                    ax = plt.subplot(X_train.shape[1] + 1, 2, 2 * i + 1)
-                    plt.plot(np.array(iter_train), X_train[:, i], 'b--', label='Training')
-                    plt.plot(np.array(iter_val)+n_train, np.array(X_val[i]), 'r--', label='Validation')
-                    plt.vlines(np.array(iter_anomaly) + n_train, ymin=0, ymax=1, color='lime', alpha=0.5,
-                               label='Anomaly')
-                    ax.twinx()
-                    #plt.plot(np.array(iter_val)+n_train, np.array(self.y_score[block_id][:, i]), 'm+', label='max. y_score', alpha=0.5)
-                    #plt.plot(np.array(iter_val) + n_train, np.array(self.a_threshold[block_id]), 'k_', label='anomaly_threshold')
-                    plt.title('d[' + str(i) + ']')
-                    plt.xlabel('subproblems')
-                    #plt.yscale('log')
-                    plt.grid()
-                plt.legend()
-                # points
-                for i in range(y_train.shape[1]):
-                    plt.subplot(y_train.shape[1] + 1, 2, 2 * i + 2)
-                    plt.plot(iter_train, y_train[:, i], 'b--', label='Training')
-                    plt.plot(np.array(iter_val)+n_train, np.array(y_val[i]), 'r--', label='Validation')
-                    plt.vlines(np.array(iter_anomaly) + n_train, ymin=0, ymax=1, color='lime', alpha=0.5,
-                               label='Anomaly')
-                    plt.title('y[' + str(i) + ']')
-                    plt.xlabel('subproblems')
-                    plt.grid()
-                plt.legend()
-                plt.savefig('Block_[' + str(block_id) + '] Training_Data', dpi=500)
-            #'''
-            plot = True
-            print('spe score')
-            print(self.spe_score[block_id])
-            if plot:
+                ax = plt.subplot(n_components, 1, i+1)
+                plt.plot(iter_train, self.PC_tr[block_id][:, i], 'b--', label='PC_train')
+                plt.plot(iter_train, T_scores[:, i], 'm+')
+                plt.plot(np.array(iter_val) + n_train, self.y_score[block_id][:, i], 'm+', label='y_score')
+                #plt.plot(np.array(iter_val)+n_train, self.spe_score[block_id], 'kx', label='SPE')
+                #plt.plot(iter_train, self.spe_main[block_id], 'kx')
+                plt.hlines(y=self.a_threshold[block_id], xmin=0, xmax=n_train+len(iter_val), label='T² threshold', color='teal', alpha=0.5)
+                #plt.hlines(y=self.spe_threshold[block_id], xmin=0, xmax=n_train + len(iter_val), label='SPE threshold',
+                 #          color='darkorange', alpha=0.5)
+                plt.grid()
+                plt.xlabel('subproblems')
+                ax2 = ax.twinx()
+                plt.plot(np.array(iter_val)+n_train, self.PC_main[block_id][:, i], 'r--', label='PC_'+str(i)+'_test')
 
-                n_components = self.PC_main[block_id].shape[1]
-                plt.figure(figsize=(25, 6*n_components), tight_layout=True)
-                print('spe main')
-                print(self.spe_main[block_id])
-                n_samples = self.PC_main[block_id].shape[0]
-                for i in range(n_components):
+                plt.title('Block_'+str(block_id)+' PC_' + str(i)+ 'Train_Data: '+str(len(iter_train)) + ' Test_Data: '+ str(len(iter_val)))
 
-                    ax = plt.subplot(n_components, 1, i+1)
-                    plt.plot(iter_train, self.PC_tr[block_id][:, i], 'b--', label='PC_train')
-                    plt.plot(iter_train, T_scores[:, i], 'm+')
-                    plt.plot(np.array(iter_val) + n_train, self.y_score[block_id][:, i], 'm+', label='y_score')
-                    plt.plot(np.array(iter_val)+n_train, self.spe_score[block_id], 'kx', label='SPE')
-                    plt.plot(iter_train, self.spe_main[block_id], 'kx')
-                    plt.grid()
-                    plt.xlabel('subproblems')
-                    ax2 = ax.twinx()
-                    plt.plot(np.array(iter_val)+n_train, self.PC_main[block_id][:, i], 'r--', label='PC_'+str(i)+'_test')
-
-                    plt.title('Block_'+str(block_id)+' PC_' + str(i))
-
-                ax.legend(loc='upper left')
-                ax2.legend(loc='upper right')
-                plt.savefig('Block'+str(block_id)+'PC', dpi=200)
+            ax.legend(loc='upper left')
+            ax2.legend(loc='upper right')
+            plt.savefig('Block'+str(block_id)+'PC_'+str(exp_type)+'.png', dpi=200)
 
     def ML_ColGen_test(self, block_id, direction, x_ia):
         '''
@@ -1843,25 +1868,67 @@ class RefactoryColGen:
 
     def testing(self):
         # testing Surrogate Model for each block
+        train_sets = [15] # train_set will be train_set += min(round(X.shape[0]*0.8, 1), len(bin_index)*5)
+        alphas = [0.25, 0.35, 0.45, 0.55, 0.65]
+        alphas = [0.35]
+        train_set = 35
+        num_blocks = self.problem.block_model.num_blocks
 
-        for block_id in range(self.problem.block_model.num_blocks):
-            print('Block: ', block_id)
-            # init_ML -> create way to randomize and change size of training data -> parameter for init train
-            test_size = 0.4
-            self.init_ML(block_id, test_size) # test size, random_seed
+        #num_blocks = 1
+        # experiment loop train sets
+        for train_set in train_sets:
+            for block_id in range(num_blocks):
+                X_train, y_train, X_test, y_test = self.problem.sub_problems[block_id].get_training_data(block_id)
+                n_train = X_train.shape[0]
+                n_test = X_test.shape[0]
+                # train model
+                self.init_ML(block_id, train_set)  # test size, random_seed
+            # experiment loop alphas
+            for alpha in alphas:
+                # solving with SG Model
+                for block_id in range(num_blocks):
+                    bin_index = self.problem.sub_problems[block_id].binary_index[block_id]
+                    if len(bin_index) > 0:
+                        print('Block: ', block_id)
+                        self.alpha = alpha
 
-            # ML_ColGen_test loop over number of directions of subproblems
-            for i in range(len(self.X_main[block_id])):
-                self.n_subproblems_main[block_id] = i+1
-                dir_im_space = self.X_main[block_id][i][1]
-                x_ia = self.x_ia[block_id][i][1]
+                        # ML_ColGen_test loop over number of directions of subproblems
+                        # in range(n_train, n_train+n_test)
+                        for i in range(len(self.X_main[block_id])):
+                            self.n_subproblems_main[block_id] = i+1
+                            dir_im_space = self.X_main[block_id][i][1]
+                            x_ia = self.x_ia[block_id][i][1]
 
-                self.ML_ColGen_test(block_id, dir_im_space, x_ia)
-            # plot_main
-            self.plot_main(block_id)
+                            self.ML_ColGen_test(block_id, dir_im_space, x_ia)
+                        # plot_main
+                        self.plot_main(block_id, exp_type=train_set)
 
-            # clear lists
-            self.predictions[block_id] = []
-            self.newpoints[block_id] = []
-            self.corrections[block_id] = []
-            self.anomaly[block_id] = []
+                        # clear lists
+                        self.predictions[block_id] = []
+                        self.newpoints[block_id] = []
+                        self.corrections[block_id] = []
+                        self.anomaly[block_id] = []
+
+                        self.anomaly[block_id] = []
+                        self.n_subproblems_main[block_id] = 1
+                        self.y_score[block_id] = None
+                        self.a_threshold[block_id] = None
+                        self.spe_theshold[block_id] = None
+                        self.PC_main[block_id] = None
+                        self.PC_tr[block_id] = None
+                        self.t_score[block_id] = None
+                        self.spe_score[block_id] = None
+                        self.spe_main[block_id] = None
+
+    def sub_solve_train(self, block_id):
+        X_train, y_train, X_test, y_test = self.problem.sub_problems[block_id].get_training_data(block_id)
+        bin_preds = None
+        for i in range(X_train.shape[0]):
+            direction = X_train[i, :]
+            bin_pred, bin_index = self.problem.sub_problems[block_id].ml_sub_solver(block_id, direction)
+            if bin_preds is None:
+                bin_preds = bin_pred.reshape(1, -1)
+            else:
+                bin_preds = np.concatenate((bin_preds, bin_pred.reshape(1, -1)), axis=0)
+
+        return bin_preds

@@ -978,14 +978,14 @@ class PyomoSubProblems(SubProblemsBase):
         self.proj_sub_problem.update_var_upper_bound(index)
         self.line_search_sub_problem.update_var_upper_bound(index)
 
-    def ml_sub_solver_init_train(self, block_id, training_data, phase, test_size):
+    def ml_sub_solver_init_train(self, block_id, training_data, phase, train_set):
         """ initiates training of the surrogate model
         :param: block_id
         :type: int
         :param: training_data
         :type: dict
         """
-        return self.surrogate_model.init_train(block_id, training_data, phase, test_size)
+        return self.surrogate_model.init_train(block_id, training_data, phase, train_set)
 
     def ml_sub_solver_test_init_train(self, block_id, training_data):
         """ tests the surrogate model, predicts feasible points from directions
@@ -1021,7 +1021,8 @@ class PyomoSubProblems(SubProblemsBase):
         return self.surrogate_model.update_model(block_id, training_data)
 
     def get_training_data(self, block_id):
-        return self.surrogate_model.X_train[block_id], self.surrogate_model.y_train[block_id]
+        return self.surrogate_model.X_train[block_id], self.surrogate_model.y_train[block_id], \
+                    self.surrogate_model.X_validation[block_id], self.surrogate_model.y_validation[block_id]
 
     def add_train_data(self, block_id, training_data):
         return self.surrogate_model.add_train_data(block_id, training_data)

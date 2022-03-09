@@ -30,14 +30,14 @@ if __name__ == '__main__':
 
     with open('decogo.set', 'w') as file:
         file.write('strategy = CG\n')
-        file.write('maxtime = 1000\n')  # 1 hours
+        file.write('maxtime = 10000\n')  # 1 hours
         file.write('cg_max_iter = 5\n')
         file.write('cg_sub_gradient_max_iter = 3\n')
         file.write('decomp_estimate_var_bounds = False\n')
         file.write('cg_normalize_duals = False\n')
         file.write('cg_max_main_iter = 20\n')  # main iteration limit
         # ========================= primal heuristics =========================
-        file.write('cg_find_solution = False \n')
+        file.write('cg_find_solution = True \n')
         file.write('cg_find_sol_mip_pool = ' + str(pool_size) + '\n')
         file.write('cg_find_sol_mip_pool_tau = ' + str(tau) + '\n')
         file.write('cg_find_sol_mip_pool_max_round = ' + str(max_round) + '\n')
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         file.write('cg_fast_fw = True\n')  # switch off fast CG
         file.write('cg_fast_approx = False\n')  # using exact sub-problem
         # solving in fast CG
-        file.write('exact_solve_data = True\n')  # using exact sub-problem solving
+        file.write('exact_solve_data = False\n')  # using exact sub-problem solving
         # in calculating the first feasible solution
         # ===================================================================
         file.write('user_defined_input_model = True\n')
