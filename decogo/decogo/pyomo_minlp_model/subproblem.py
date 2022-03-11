@@ -524,7 +524,7 @@ class SurrogateModel:
 
             # seperate to train & test set (training set is last added data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_ratio,
-                                                                shuffle=False)
+                                                                shuffle=True)
             self.X_validation[block_id] = X_test
             self.y_validation[block_id] = y_test
 
