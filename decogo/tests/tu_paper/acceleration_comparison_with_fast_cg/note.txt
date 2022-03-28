@@ -1,0 +1,1 @@
+Compares the runs with FW and without, primal heuristic is switched off
