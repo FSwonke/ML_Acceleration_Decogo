@@ -1,0 +1,1317 @@
+Original model:
+Number of variables:                              2136                          
+Number of constraints:                            2722                          
+
+Block separable reformulation:
+Number of blocks:                                 65                            
+Number of nonlinear blocks:                       64                            
+Min size of blocks:                               3                             
+Max size of blocks (without linear blocks):       37                            
+Max size of blocks (including linear blocks):     792                           
+Number of vars:                                   2184                          
+Number of global constraints:                     1584                          
+Number of nonzero resources per block:            60,62,62,60,60,62,62,60,60,62,62,60,60,62,62,60,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,31,37,37,37,37,37,37,37,37,37,37,37,37,649
+Number of equal./inequal. of global constraints:  696/888                       
+Total number of copy constraints:                 696                           
+-----------------------------------------------------
+Used time: 447.3546140193939
+-----------------------------------------------------
+
+Initialization
+
+Subgradient steps
+Subgra.iter    Lagrange bound                alpha                         
+1              57239901.47573663             1                             
+2              6859206621.012082             1                             
+3              3403918371.0120826            0.5                           
+
+Time used for SubGradient: --268.61-- seconds
+-----------------------------------------------------
+Used time: 715.9646140193939
+-----------------------------------------------------
+
+=======================================================
+Column generation: approximated subproblem solving
+
+Initial CG objective value: 57239901.47573663
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              57239901.47573663             9355.20225842433              369633.6519402424             
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -53513626.292546734           7812.557097785435             26573.132967913716            
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -60421586.88171256            7973.487737945603             15040.666537103996            
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -54853087.70149707            8795.876170526837             11192.50043201338             
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -49666940.55604769            7700.837706562937             8516.420323386583             
+Iteration limit
+New columns added: [6, 6, 6, 6, 5, 5, 4, 4, 7, 4, 5, 5, 6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 8, 6, 6, 7, 6, 6, 6, 7, 6, 8, 6, 6, 6, 6, 6, 6, 7, 7, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 0]
+number of minlp subproblems solved during CG: 0
+
+=======================================================
+Time used for init CG in iter 0: --528.75-- seconds
+-----------------------------------------------------
+Used time: --1244.71-- seconds
+-----------------------------------------------------
+
+=======================================================
+Find solution
+-------------------------------------
+solve_nlp_resource_proj obj: -52925163.1173 
+nlp_resource_proj average expr_int: 0.1187 
+max round error: 0.3785 
+-------------------------------------
+-------------------------------------
+solve_fixed_nlp_problem obj: -60415041.4905 
+-------------------------------------
+Gap (c_tilde_y and c_tilde_x):                    12.3973735486                 
+
+After solving fixed NLP projection problem, the solution point is feasible
+the feasible solution point improves
+Projection Gap (c(x_NLP_proj) and primal bound):  12.3973735486                 
+
+Feasible candidate obtained in iter 0: -60415041.49045231
+
+=======================================================
+Time used for init FindSol in iter 0: --132.94-- seconds
+-----------------------------------------------------
+Used time: --1377.65-- seconds
+-----------------------------------------------------
+Found the first feasible solution
+IA obj. val: -52716564.17760776
+Elapsed time: 1377.654614019394
+---------------------------------------------------------
+Fast column generation
+iter      IA obj. value                 slacks                        
+0         -52716560.17760776            0.007207771172566109
+IA obj. val: -58448069.28267178
+Elapsed time: 1378.9648299694063
+
+iter      IA obj. value                 slacks                        
+1         -51553327.63686168            9.78994663114463e-13          
+IA obj. val: -51553327.63686168
+Elapsed time: 1433.0857770919802
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+2         -45494147.25009829            0.0                           
+IA obj. val: -45494147.25009829
+Elapsed time: 1487.7841535091402
+Number of new columns in the current iteration:
+[0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+3         -40032227.33113787            0.0                           
+IA obj. val: -40032227.33113787
+Elapsed time: 1541.7994583129885
+Number of new columns in the current iteration:
+[0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+4         -39637726.0959149             0.0                           
+IA obj. val: -39637726.0959149
+Elapsed time: 1595.7581935405733
+Number of new columns in the current iteration:
+[1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+5         -37951859.542964645           0.0                           
+IA obj. val: -37951859.542964645
+Elapsed time: 1650.047483968735
+Number of new columns in the current iteration:
+[1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+6         -37872209.55671621            0.0                           
+IA obj. val: -37872209.55671621
+Elapsed time: 1704.9231508255007
+Number of new columns in the current iteration:
+[0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+7         -37821873.8234619             0.0                           
+IA obj. val: -37821873.8234619
+Elapsed time: 1758.407339859009
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+8         -37754073.95744094            0.0                           
+IA obj. val: -37754073.95744094
+Elapsed time: 1812.4138072013857
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+9         -37609288.82227663            0.0                           
+IA obj. val: -37609288.82227663
+Elapsed time: 1866.0987518310549
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+10        -37503416.117170975           0.0                           
+IA obj. val: -37503416.117170975
+Elapsed time: 1919.3912334918978
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+New columns in FastCG:
+[3, 3, 3, 2, 3, 3, 3, 2, 5, 3, 10, 8, 4, 4, 3, 3, 6, 6, 7, 7, 7, 5, 5, 7, 7, 6, 8, 7, 9, 6, 7, 8, 7, 6, 7, 4, 8, 8, 4, 6, 7, 10, 6, 7, 10, 10, 4, 2, 3, 9, 4, 2, 9, 10, 10, 9, 8, 10, 8, 5, 9, 7, 10, 10]
+number of unfixed nlp subproblems solved during CG: 650
+Time used for solving subproblem: --540.44-- seconds
+---------------------------------------------------------
+Time used for init cg fast fw in iter 1: --541.75-- seconds
+-----------------------------------------------------
+Used time: --1919.4-- seconds
+-----------------------------------------------------
+---------------------------------------------------------
+Fast column generation
+iter      IA obj. value                 slacks                        
+0         -37503416.117170975           0.0                           
+IA obj. val: -37503416.117170975
+Elapsed time: 1920.777012395859
+
+iter      IA obj. value                 slacks                        
+1         -36797675.80512182            0.0                           
+IA obj. val: -36797675.80512182
+Elapsed time: 1974.9860241889955
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+2         -36781728.007661104           0.0                           
+IA obj. val: -36781728.007661104
+Elapsed time: 2029.5288875579836
+Number of new columns in the current iteration:
+[0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0]
+
+iter      IA obj. value                 slacks                        
+3         -36758096.2403229             0.0                           
+IA obj. val: -36758096.2403229
+Elapsed time: 2083.612598705292
+Number of new columns in the current iteration:
+[1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+4         -36758096.24070732            0.0                           
+IA obj. val: -36758096.24070732
+Elapsed time: 2137.791313457489
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0]
+Cannot load a SolverResults object with bad status: error
+solve: max_iter = 8
+Cannot load a SolverResults object with bad status: error
+solve: max_iter = 6
+Cannot load a SolverResults object with bad status: error
+error: cannot solve
+
+iter      IA obj. value                 slacks                        
+5         -36708320.73202721            0.0                           
+IA obj. val: -36708320.73202721
+Elapsed time: 2190.665389585495
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+6         -36686343.97389389            0.0                           
+IA obj. val: -36686343.97389389
+Elapsed time: 2244.7967796802523
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0]
+
+iter      IA obj. value                 slacks                        
+7         -36529220.04753695            0.0                           
+IA obj. val: -36529220.04753695
+Elapsed time: 2299.4419537067415
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+8         -36500090.89328636            0.0                           
+IA obj. val: -36500090.89328636
+Elapsed time: 2353.4972801685335
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+9         -36500090.87665165            0.0                           
+IA obj. val: -36500090.87665165
+Elapsed time: 2407.5710113525392
+Number of new columns in the current iteration:
+[1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+10        -36500090.87526005            0.0                           
+IA obj. val: -36500090.87526005
+Elapsed time: 2461.93942694664
+Number of new columns in the current iteration:
+[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0]
+
+New columns in FastCG:
+[3, 1, 2, 3, 1, 1, 2, 3, 9, 8, 9, 8, 1, 0, 1, 2, 9, 9, 8, 10, 6, 10, 8, 10, 8, 10, 10, 7, 10, 6, 8, 8, 7, 10, 9, 7, 8, 7, 6, 10, 10, 10, 10, 9, 10, 10, 10, 8, 5, 10, 7, 5, 10, 7, 7, 10, 4, 8, 7, 4, 7, 8, 7, 5]
+number of unfixed nlp subproblems solved during CG: 650
+Time used for solving subproblem: --541.18-- seconds
+---------------------------------------------------------
+Time used for init cg fast fw in iter 2: --542.55-- seconds
+-----------------------------------------------------
+Used time: --2461.95-- seconds
+-----------------------------------------------------
+---------------------------------------------------------
+Fast column generation
+iter      IA obj. value                 slacks                        
+0         -36500090.87526005            0.0                           
+IA obj. val: -36500090.87526005
+Elapsed time: 2463.434395170212
+
+iter      IA obj. value                 slacks                        
+1         -35781167.10192549            0.0                           
+IA obj. val: -35781167.10192549
+Elapsed time: 2517.756861305237
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+2         -35774225.149993315           0.0                           
+IA obj. val: -35774225.149993315
+Elapsed time: 2572.5601986408237
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+3         -35772836.924031876           0.0                           
+IA obj. val: -35772836.924031876
+Elapsed time: 2626.5616308212284
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+4         -35614907.40119494            0.0                           
+IA obj. val: -35614907.40119494
+Elapsed time: 2680.7224207878116
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+5         -35614907.36470233            0.0                           
+IA obj. val: -35614907.36470233
+Elapsed time: 2734.967000818253
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+6         -35582022.29483631            0.0                           
+IA obj. val: -35582022.29483631
+Elapsed time: 2789.251480674744
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+7         -35580293.097817816           0.0                           
+IA obj. val: -35580293.097817816
+Elapsed time: 2843.7169693470005
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+8         -35574641.69815445            0.0                           
+IA obj. val: -35574641.69815445
+Elapsed time: 2897.7568210124973
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+9         -35573053.84104381            0.0                           
+IA obj. val: -35573053.84104381
+Elapsed time: 2951.9737413883213
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0]
+
+iter      IA obj. value                 slacks                        
+10        -35573053.943261914           0.0                           
+IA obj. val: -35573053.943261914
+Elapsed time: 3006.1979828834537
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0]
+
+New columns in FastCG:
+[10, 10, 10, 10, 2, 1, 2, 1, 9, 10, 9, 9, 0, 2, 1, 1, 10, 8, 10, 10, 10, 10, 10, 10, 7, 10, 5, 6, 9, 9, 8, 9, 8, 6, 10, 8, 9, 10, 3, 6, 10, 10, 8, 8, 10, 8, 9, 7, 6, 9, 6, 6, 4, 4, 4, 10, 5, 5, 8, 3, 10, 10, 3, 7]
+number of unfixed nlp subproblems solved during CG: 650
+Time used for solving subproblem: --542.76-- seconds
+---------------------------------------------------------
+Time used for init cg fast fw in iter 3: --544.24-- seconds
+-----------------------------------------------------
+Used time: --3006.19-- seconds
+-----------------------------------------------------
+---------------------------------------------------------
+Fast column generation
+iter      IA obj. value                 slacks                        
+0         -35573053.943261914           0.0                           
+IA obj. val: -35573053.943261914
+Elapsed time: 3007.7917879486085
+
+iter      IA obj. value                 slacks                        
+1         -35177248.2083828             0.0                           
+IA obj. val: -35177248.2083828
+Elapsed time: 3061.814057197571
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+2         -35177158.27272812            0.0                           
+IA obj. val: -35177158.27272812
+Elapsed time: 3116.64113530159
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+3         -35174498.18334265            0.0                           
+IA obj. val: -35174498.18334265
+Elapsed time: 3171.0719836616518
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+4         -35174498.128771566           0.0                           
+IA obj. val: -35174498.128771566
+Elapsed time: 3225.338250961304
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+5         -35174498.000635885           0.0                           
+IA obj. val: -35174498.000635885
+Elapsed time: 3279.7507894897462
+Number of new columns in the current iteration:
+[1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+6         -35174498.12954265            0.0                           
+IA obj. val: -35174498.12954265
+Elapsed time: 3334.169087972641
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+7         -35174498.28551089            0.0                           
+IA obj. val: -35174498.28551089
+Elapsed time: 3388.2630937957765
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+8         -35174498.13479494            0.0                           
+IA obj. val: -35174498.13479494
+Elapsed time: 3442.6172641181947
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+9         -35087768.33735296            0.0                           
+IA obj. val: -35087768.33735296
+Elapsed time: 3496.823045578003
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+10        -35087768.12037184            0.0                           
+IA obj. val: -35087768.12037184
+Elapsed time: 3551.6548736953737
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0]
+
+New columns in FastCG:
+[10, 10, 9, 10, 6, 9, 9, 9, 9, 9, 9, 9, 0, 0, 0, 0, 10, 10, 10, 10, 6, 10, 10, 9, 10, 10, 10, 8, 10, 9, 10, 10, 9, 6, 10, 10, 7, 10, 6, 8, 10, 10, 10, 10, 10, 10, 5, 6, 4, 10, 6, 6, 10, 2, 1, 9, 3, 4, 8, 1, 2, 7, 2, 3]
+number of unfixed nlp subproblems solved during CG: 650
+Time used for solving subproblem: --543.86-- seconds
+---------------------------------------------------------
+Time used for init cg fast fw in iter 4: --545.46-- seconds
+-----------------------------------------------------
+Used time: --3551.65-- seconds
+-----------------------------------------------------
+---------------------------------------------------------
+Fast column generation
+iter      IA obj. value                 slacks                        
+0         -35087768.12037184            0.0                           
+IA obj. val: -35087768.12037184
+Elapsed time: 3553.3189011096956
+
+iter      IA obj. value                 slacks                        
+1         -35050168.64110817            0.0                           
+IA obj. val: -35050168.64110817
+Elapsed time: 3607.5229177951815
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+2         -35048467.64822231            0.0                           
+IA obj. val: -35048467.64822231
+Elapsed time: 3662.470153617859
+Number of new columns in the current iteration:
+[0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+3         -35048464.67369504            0.0                           
+IA obj. val: -35048464.67369504
+Elapsed time: 3716.659021663666
+Number of new columns in the current iteration:
+[1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+4         -35048465.3680289             0.0                           
+IA obj. val: -35048465.3680289
+Elapsed time: 3771.0734327316286
+Number of new columns in the current iteration:
+[1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+5         -35048464.71100706            0.0                           
+IA obj. val: -35048464.71100706
+Elapsed time: 3825.059801387787
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+6         -35048465.05794698            0.0                           
+IA obj. val: -35048465.05794698
+Elapsed time: 3879.5717282772066
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0]
+
+iter      IA obj. value                 slacks                        
+7         -35048464.524578415           0.0                           
+IA obj. val: -35048464.524578415
+Elapsed time: 3934.566806602478
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0]
+
+iter      IA obj. value                 slacks                        
+8         -35047980.315361634           0.0                           
+IA obj. val: -35047980.315361634
+Elapsed time: 3988.7442903995516
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 0]
+
+iter      IA obj. value                 slacks                        
+9         -35047979.92380928            0.0                           
+IA obj. val: -35047979.92380928
+Elapsed time: 4043.6976223468782
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0]
+
+iter      IA obj. value                 slacks                        
+10        -35046066.31974625            0.0                           
+IA obj. val: -35046066.31974625
+Elapsed time: 4098.546315717697
+Number of new columns in the current iteration:
+[1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0]
+
+New columns in FastCG:
+[9, 9, 9, 9, 8, 9, 9, 10, 10, 9, 10, 6, 0, 0, 0, 3, 8, 8, 10, 7, 4, 9, 5, 9, 10, 10, 10, 10, 10, 9, 8, 9, 7, 8, 10, 8, 7, 10, 5, 9, 10, 10, 7, 7, 9, 10, 6, 7, 6, 8, 6, 6, 8, 6, 4, 10, 3, 3, 8, 3, 6, 10, 3, 5]
+number of unfixed nlp subproblems solved during CG: 650
+Time used for solving subproblem: --545.23-- seconds
+---------------------------------------------------------
+Time used for init cg fast fw in iter 5: --546.89-- seconds
+-----------------------------------------------------
+Used time: --4098.54-- seconds
+-----------------------------------------------------
+
+CG relaxation obj. value in iter 0: -35046066.31974625
+Time used for total init CG in iter 0: --3382.59-- seconds
+-----------------------------------------------------
+Used time at CG iter 0: --4098.54-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -35046066.31974625
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -35046066.31974625            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34931866.970759876           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34925462.4117201             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34915712.9156606             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34881259.05469325            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0]
+number of minlp subproblems solved during CG: 320
+
+=======================================================
+CG relaxation obj. value in iter 1: -34881259.05469325
+
+Time used for CG: --576.13-- seconds
+-------------------------------------------------
+Used time at CG iter 1: --4674.67-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *1*   320
+Total number of minlp subproblems solved in iter 1: 515
+Total number of columns in iter 1: 3030
+Columns in blocks in iter 1: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 57, 55, 59, 57, 46, 57, 51, 58, 55, 58, 56, 51, 63, 53, 55, 59, 51, 49, 60, 50, 52, 59, 38, 52, 63, 64, 55, 54, 62, 61, 47, 43, 37, 59, 42, 39, 56, 43, 41, 63, 38, 45, 54, 31, 49, 57, 40, 45, 0]
+Time used for CG in iter 1: --576.13-- seconds
+Total time used in iter 1: --576.13-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --118.63-- seconds
+-----------------------------------------------------
+Used time: --4793.3-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34744231.08431839
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34744231.08431839            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34744077.62014856            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34741492.56004068            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34673571.87094216            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34673566.83109117            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 1, 5, 5, 0, 5, 5, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 5, 0, 2, 4, 5, 3, 5, 4, 4, 3, 0]
+number of minlp subproblems solved during CG: 215
+
+=======================================================
+CG relaxation obj. value in iter 2: -34673566.83109117
+
+Time used for CG: --459.15-- seconds
+-------------------------------------------------
+Used time at CG iter 2: --5252.45-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *2*   215
+Total number of minlp subproblems solved in iter 2: 794
+Total number of columns in iter 2: 3272
+Columns in blocks in iter 2: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 57, 61, 65, 59, 52, 63, 51, 64, 61, 60, 62, 57, 69, 59, 61, 65, 57, 55, 66, 56, 58, 65, 44, 58, 69, 70, 61, 60, 68, 67, 53, 49, 43, 65, 48, 45, 57, 43, 47, 64, 41, 50, 60, 35, 55, 62, 45, 49, 0]
+Time used for CG in iter 2: --459.15-- seconds
+Total time used in iter 2: --459.15-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --122.09-- seconds
+-----------------------------------------------------
+Used time: --5374.54-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609978.28143015
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609978.28143015            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609875.43770575            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609875.2136668             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609874.87871929            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609874.74106478            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 5, 5, 0, 5, 5, 0, 5, 5, 4, 5, 5, 3, 5, 5, 3, 5, 5, 5, 5, 5, 3, 5, 5, 4, 5, 5, 5, 5, 5, 3, 5, 5, 0, 0, 0, 5, 0, 2, 2, 5, 1, 3, 3, 3, 0]
+number of minlp subproblems solved during CG: 205
+
+=======================================================
+CG relaxation obj. value in iter 3: -34609874.74106478
+
+Time used for CG: --445.4-- seconds
+-------------------------------------------------
+Used time at CG iter 3: --5819.94-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *3*   205
+Total number of minlp subproblems solved in iter 3: 1063
+Total number of columns in iter 3: 3487
+Columns in blocks in iter 3: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 57, 67, 71, 59, 58, 69, 51, 70, 67, 60, 68, 63, 74, 65, 67, 69, 63, 61, 70, 62, 64, 71, 50, 64, 73, 76, 67, 65, 74, 73, 59, 55, 49, 69, 54, 51, 57, 43, 48, 70, 41, 53, 63, 41, 57, 66, 49, 53, 0]
+Time used for CG in iter 3: --445.4-- seconds
+Total time used in iter 3: --445.4-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --125.09-- seconds
+-----------------------------------------------------
+Used time: --5945.03-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.61310145
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.61310145            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.60711088            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609873.60105351            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609873.59866593            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609873.59668023            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 2, 0, 5, 2, 0, 5, 4, 0, 5, 4, 1, 5, 5, 0, 5, 5, 1, 5, 4, 0, 5, 4, 1, 5, 5, 2, 5, 5, 0, 5, 5, 0, 5, 5, 0, 0, 0, 0, 0, 3, 0, 0, 4, 0, 0, 4, 0]
+number of minlp subproblems solved during CG: 175
+
+=======================================================
+CG relaxation obj. value in iter 4: -34609873.59668023
+
+Time used for CG: --344.33-- seconds
+-------------------------------------------------
+Used time at CG iter 4: --6289.36-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *4*   175
+Total number of minlp subproblems solved in iter 4: 1302
+Total number of columns in iter 4: 3654
+Columns in blocks in iter 4: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 59, 73, 74, 60, 64, 72, 52, 76, 72, 61, 74, 68, 76, 71, 73, 69, 69, 67, 72, 68, 69, 71, 56, 69, 75, 82, 73, 68, 80, 79, 59, 61, 55, 69, 60, 57, 58, 43, 48, 71, 41, 57, 64, 41, 62, 67, 50, 58, 0]
+Time used for CG in iter 4: --344.33-- seconds
+Total time used in iter 4: --344.33-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --123.75-- seconds
+-----------------------------------------------------
+Used time: --6413.11-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.59573067
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.59573067            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.59121387            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609873.48249461            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609873.58241976            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609873.58234253            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 5, 0, 0, 5, 0, 0, 5, 3, 0, 3, 3, 4, 5, 3, 2, 3, 3, 1, 4, 3, 1, 5, 5, 0, 5, 5, 3, 5, 5, 2, 5, 5, 2, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 165
+
+=======================================================
+CG relaxation obj. value in iter 5: -34609873.58234253
+
+Time used for CG: --353.61-- seconds
+-------------------------------------------------
+Used time at CG iter 5: --6766.72-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *5*   165
+Total number of minlp subproblems solved in iter 5: 1531
+Total number of columns in iter 5: 3794
+Columns in blocks in iter 5: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 64, 73, 74, 60, 70, 72, 52, 82, 72, 61, 80, 72, 76, 75, 77, 74, 75, 71, 75, 72, 73, 73, 61, 73, 77, 88, 79, 68, 86, 85, 63, 67, 61, 72, 66, 63, 61, 43, 50, 71, 42, 59, 64, 42, 62, 68, 51, 58, 0]
+Time used for CG in iter 5: --353.61-- seconds
+Total time used in iter 5: --353.61-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --120.77-- seconds
+-----------------------------------------------------
+Used time: --6887.49-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.58116667
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.58116667            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.58087299            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609873.580715604           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609873.574767634           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609873.5712889             0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 0, 0, 4, 0, 0, 0, 0, 0, 4, 3, 0, 5, 3, 0, 1, 2, 0, 0, 0, 0, 4, 0, 0, 5, 5, 0, 5, 4, 0, 5, 5, 0, 5, 5, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+number of minlp subproblems solved during CG: 110
+
+=======================================================
+CG relaxation obj. value in iter 6: -34609873.5712889
+
+Time used for CG: --218.5-- seconds
+-------------------------------------------------
+Used time at CG iter 6: --7105.99-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *6*   110
+Total number of minlp subproblems solved in iter 6: 1705
+Total number of columns in iter 6: 3890
+Columns in blocks in iter 6: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 79, 74, 60, 75, 72, 52, 82, 72, 61, 85, 76, 76, 81, 81, 74, 77, 74, 75, 72, 73, 73, 66, 74, 77, 94, 85, 68, 92, 90, 63, 73, 67, 72, 72, 69, 61, 43, 50, 75, 42, 59, 64, 42, 62, 68, 51, 60, 0]
+Time used for CG in iter 6: --218.5-- seconds
+Total time used in iter 6: --218.5-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --124.2-- seconds
+-----------------------------------------------------
+Used time: --7230.19-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.57169018
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.57169018            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.57170615            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609873.571726315           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609873.570802316           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609873.571149774           0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 1, 3, 2, 0, 5, 2, 1, 5, 0, 1, 5, 4, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 100
+
+=======================================================
+CG relaxation obj. value in iter 7: -34609873.571149774
+
+Time used for CG: --199.71-- seconds
+-------------------------------------------------
+Used time at CG iter 7: --7429.9-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *7*   100
+Total number of minlp subproblems solved in iter 7: 1869
+Total number of columns in iter 7: 3968
+Columns in blocks in iter 7: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 79, 74, 60, 75, 72, 52, 87, 75, 61, 85, 76, 76, 81, 81, 74, 78, 74, 75, 77, 78, 75, 70, 77, 77, 100, 88, 70, 98, 91, 65, 79, 72, 72, 78, 75, 62, 43, 50, 76, 42, 60, 65, 42, 64, 69, 51, 60, 0]
+Time used for CG in iter 7: --199.71-- seconds
+Total time used in iter 7: --199.71-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --120.36-- seconds
+-----------------------------------------------------
+Used time: --7550.26-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.57113572
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.57113572            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.57111439            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609873.57011883            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609873.570480816           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609873.57046695            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 1, 0, 0, 4, 0, 0, 3, 0, 0, 3, 0, 0, 1, 0, 0, 5, 0, 0, 5, 0, 0, 2, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 75
+
+=======================================================
+CG relaxation obj. value in iter 8: -34609873.57046695
+
+Time used for CG: --137.26-- seconds
+-------------------------------------------------
+Used time at CG iter 8: --7687.52-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *8*   75
+Total number of minlp subproblems solved in iter 8: 2008
+Total number of columns in iter 8: 4020
+Columns in blocks in iter 8: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 77, 60, 75, 72, 52, 92, 77, 61, 85, 76, 76, 83, 81, 74, 83, 74, 75, 81, 78, 75, 74, 77, 77, 102, 88, 70, 104, 91, 65, 85, 73, 72, 81, 81, 62, 43, 50, 76, 42, 60, 65, 42, 64, 69, 51, 60, 0]
+Time used for CG in iter 8: --137.26-- seconds
+Total time used in iter 8: --137.26-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --125.28-- seconds
+-----------------------------------------------------
+Used time: --7812.8-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609873.570071764
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609873.570071764           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609873.57036456            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.89725348            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.89722619            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.893406264           0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 2, 0, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 4, 0, 0, 5, 0, 0, 2, 4, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 65
+
+=======================================================
+CG relaxation obj. value in iter 9: -34609872.893406264
+
+Time used for CG: --148.84-- seconds
+-------------------------------------------------
+Used time at CG iter 9: --7961.64-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *9*   65
+Total number of minlp subproblems solved in iter 9: 2137
+Total number of columns in iter 9: 4063
+Columns in blocks in iter 9: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 77, 61, 75, 72, 52, 92, 80, 61, 88, 76, 76, 86, 81, 74, 87, 74, 75, 81, 78, 75, 74, 77, 77, 102, 91, 70, 109, 91, 65, 91, 73, 72, 84, 86, 62, 47, 50, 76, 42, 61, 65, 43, 64, 69, 52, 60, 0]
+Time used for CG in iter 9: --148.84-- seconds
+Total time used in iter 9: --148.84-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --121.21-- seconds
+-----------------------------------------------------
+Used time: --8082.85-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.89327384
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.89327384            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.892904975           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.89259588            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.89238166            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.89236267            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 1, 0, 1, 3, 4, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 75
+
+=======================================================
+CG relaxation obj. value in iter 10: -34609872.89236267
+
+Time used for CG: --158.94-- seconds
+-------------------------------------------------
+Used time at CG iter 10: --8241.79-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *10*   75
+Total number of minlp subproblems solved in iter 10: 2276
+Total number of columns in iter 10: 4103
+Columns in blocks in iter 10: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 78, 61, 75, 73, 52, 92, 81, 61, 88, 76, 76, 88, 81, 75, 90, 74, 77, 81, 80, 79, 79, 77, 77, 103, 91, 70, 115, 91, 65, 91, 73, 72, 89, 86, 62, 48, 50, 77, 42, 61, 65, 43, 68, 69, 52, 60, 0]
+Time used for CG in iter 10: --158.94-- seconds
+Total time used in iter 10: --158.94-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --121.8-- seconds
+-----------------------------------------------------
+Used time: --8363.59-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.89190397
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.89190397            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.89189208            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.89192297            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.891872846           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.891890876           0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 2, 0, 4, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 40
+
+=======================================================
+CG relaxation obj. value in iter 11: -34609872.891890876
+
+Time used for CG: --85.18-- seconds
+-------------------------------------------------
+Used time at CG iter 11: --8448.77-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *11*   40
+Total number of minlp subproblems solved in iter 11: 2380
+Total number of columns in iter 11: 4131
+Columns in blocks in iter 11: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 78, 61, 75, 73, 52, 92, 81, 61, 93, 76, 76, 88, 82, 75, 90, 74, 77, 86, 80, 79, 79, 77, 77, 103, 94, 71, 120, 91, 67, 95, 73, 72, 89, 86, 62, 48, 50, 77, 42, 61, 65, 43, 68, 70, 52, 61, 0]
+Time used for CG in iter 11: --85.18-- seconds
+Total time used in iter 11: --85.18-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --123.96-- seconds
+-----------------------------------------------------
+Used time: --8572.73-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.8887535
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.8887535             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.888758644           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88868646            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88812471            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.88809838            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 35
+
+=======================================================
+CG relaxation obj. value in iter 12: -34609872.88809838
+
+Time used for CG: --92.92-- seconds
+-------------------------------------------------
+Used time at CG iter 12: --8665.65-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *12*   35
+Total number of minlp subproblems solved in iter 12: 2479
+Total number of columns in iter 12: 4147
+Columns in blocks in iter 12: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 78, 61, 75, 73, 52, 92, 81, 61, 93, 76, 76, 88, 83, 75, 92, 74, 78, 86, 80, 79, 79, 77, 77, 103, 94, 71, 121, 91, 67, 99, 73, 72, 89, 86, 62, 48, 50, 78, 46, 61, 67, 43, 68, 70, 52, 61, 0]
+Time used for CG in iter 12: --92.92-- seconds
+Total time used in iter 12: --92.92-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --120.08-- seconds
+-----------------------------------------------------
+Used time: --8785.73-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88685274
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88685274            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.886696056           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88668142            0.0                           0.0                           
+Reduced costs greater than zero
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+number of minlp subproblems solved during CG: 24
+
+=======================================================
+CG relaxation obj. value in iter 13: -34609872.88668142
+
+Time used for CG: --50.23-- seconds
+-------------------------------------------------
+Used time at CG iter 13: --8835.96-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *13*   24
+Total number of minlp subproblems solved in iter 13: 2567
+Total number of columns in iter 13: 4162
+Columns in blocks in iter 13: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 82, 78, 61, 75, 73, 52, 92, 84, 61, 93, 76, 76, 91, 83, 75, 92, 75, 78, 86, 80, 79, 79, 77, 77, 104, 94, 71, 123, 91, 67, 100, 73, 73, 89, 86, 62, 48, 50, 78, 46, 61, 67, 43, 68, 71, 52, 63, 0]
+Time used for CG in iter 13: --50.23-- seconds
+Total time used in iter 13: --50.23-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --118.19-- seconds
+-----------------------------------------------------
+Used time: --8954.15-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88664873
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88664873            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.88667641            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88656473            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88654041            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.88650889            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 3, 1, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 25
+
+=======================================================
+CG relaxation obj. value in iter 14: -34609872.88650889
+
+Time used for CG: --54.33-- seconds
+-------------------------------------------------
+Used time at CG iter 14: --9008.48-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *14*   25
+Total number of minlp subproblems solved in iter 14: 2656
+Total number of columns in iter 14: 4178
+Columns in blocks in iter 14: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 85, 80, 61, 79, 75, 52, 92, 84, 61, 97, 76, 76, 91, 83, 75, 92, 75, 78, 86, 80, 79, 79, 77, 77, 104, 94, 71, 123, 91, 67, 100, 73, 73, 89, 86, 62, 48, 50, 78, 46, 61, 67, 43, 69, 71, 52, 63, 0]
+Time used for CG in iter 14: --54.33-- seconds
+Total time used in iter 14: --54.33-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --119.78-- seconds
+-----------------------------------------------------
+Used time: --9128.26-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88574418
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88574418            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.8857219             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88576331            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88565514            0.0                           0.0                           
+Reduced costs greater than zero
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 24
+
+=======================================================
+CG relaxation obj. value in iter 15: -34609872.88565514
+
+Time used for CG: --55.85-- seconds
+-------------------------------------------------
+Used time at CG iter 15: --9184.11-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *15*   24
+Total number of minlp subproblems solved in iter 15: 2744
+Total number of columns in iter 15: 4189
+Columns in blocks in iter 15: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 85, 80, 61, 79, 75, 52, 94, 84, 61, 97, 76, 76, 91, 83, 75, 92, 75, 78, 86, 81, 80, 79, 77, 77, 104, 94, 71, 126, 91, 67, 100, 73, 76, 89, 86, 62, 48, 50, 78, 46, 61, 67, 43, 69, 71, 52, 64, 0]
+Time used for CG in iter 15: --55.85-- seconds
+Total time used in iter 15: --55.85-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --124.09-- seconds
+-----------------------------------------------------
+Used time: --9308.2-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88537508
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88537508            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.88537465            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.885249674           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.885249674           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.885249674           0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 40
+
+=======================================================
+CG relaxation obj. value in iter 16: -34609872.885249674
+
+Time used for CG: --100.78-- seconds
+-------------------------------------------------
+Used time at CG iter 16: --9408.98-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *16*   40
+Total number of minlp subproblems solved in iter 16: 2848
+Total number of columns in iter 16: 4201
+Columns in blocks in iter 16: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 85, 80, 61, 80, 76, 52, 94, 84, 61, 97, 77, 76, 92, 83, 75, 92, 75, 80, 86, 81, 80, 79, 77, 77, 104, 94, 71, 126, 91, 67, 100, 73, 76, 90, 86, 62, 48, 50, 78, 46, 63, 69, 43, 69, 72, 52, 64, 0]
+Time used for CG in iter 16: --100.78-- seconds
+Total time used in iter 16: --100.78-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --120.17-- seconds
+-----------------------------------------------------
+Used time: --9529.15-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88530276
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88530276            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.88530276            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88530276            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88530276            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.88530276            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 25
+
+=======================================================
+CG relaxation obj. value in iter 17: -34609872.88530276
+
+Time used for CG: --50.62-- seconds
+-------------------------------------------------
+Used time at CG iter 17: --9579.77-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *17*   25
+Total number of minlp subproblems solved in iter 17: 2937
+Total number of columns in iter 17: 4205
+Columns in blocks in iter 17: [43, 41, 41, 42, 27, 30, 31, 31, 52, 46, 54, 47, 13, 14, 12, 17, 66, 86, 80, 61, 80, 76, 52, 94, 84, 61, 97, 77, 76, 92, 83, 75, 92, 75, 80, 86, 81, 80, 79, 77, 77, 105, 94, 71, 127, 91, 67, 101, 73, 76, 90, 86, 62, 48, 50, 78, 46, 63, 69, 43, 69, 72, 52, 64, 0]
+Time used for CG in iter 17: --50.62-- seconds
+Total time used in iter 17: --50.62-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --121.3-- seconds
+-----------------------------------------------------
+Used time: --9701.07-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.8830963
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.8830963             0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.88310627            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88310627            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88310627            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.88310627            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 30
+
+=======================================================
+CG relaxation obj. value in iter 18: -34609872.88310627
+
+Time used for CG: --53.32-- seconds
+-------------------------------------------------
+Used time at CG iter 18: --9754.39-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *18*   30
+Total number of minlp subproblems solved in iter 18: 3031
+Total number of columns in iter 18: 4214
+Columns in blocks in iter 18: [43, 41, 41, 42, 27, 30, 31, 31, 53, 46, 54, 47, 13, 14, 12, 17, 66, 86, 82, 61, 80, 76, 52, 94, 84, 61, 97, 77, 78, 92, 83, 75, 92, 75, 81, 86, 81, 80, 79, 77, 77, 105, 94, 71, 127, 91, 67, 101, 73, 77, 90, 86, 63, 48, 50, 78, 47, 63, 69, 43, 69, 72, 52, 64, 0]
+Time used for CG in iter 18: --53.32-- seconds
+Total time used in iter 18: --53.32-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --120.6-- seconds
+-----------------------------------------------------
+Used time: --9874.99-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.88299355
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.88299355            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.88300511            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.88297117            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.88298749            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.8830262             0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 25
+
+=======================================================
+CG relaxation obj. value in iter 19: -34609872.8830262
+
+Time used for CG: --64.23-- seconds
+-------------------------------------------------
+Used time at CG iter 19: --9939.22-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *19*   25
+Total number of minlp subproblems solved in iter 19: 3120
+Total number of columns in iter 19: 4228
+Columns in blocks in iter 19: [43, 41, 41, 42, 27, 30, 31, 31, 53, 46, 54, 47, 13, 14, 12, 17, 66, 86, 82, 61, 80, 76, 52, 94, 84, 61, 97, 77, 78, 92, 83, 75, 93, 75, 81, 91, 81, 80, 79, 77, 77, 105, 94, 71, 127, 91, 67, 104, 73, 77, 90, 86, 64, 48, 50, 78, 50, 63, 69, 43, 69, 73, 52, 64, 0]
+Time used for CG in iter 19: --64.23-- seconds
+Total time used in iter 19: --64.23-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --119.5-- seconds
+-----------------------------------------------------
+Used time: --10058.72-- seconds
+-----------------------------------------------------
+
+=======================================================
+Column generation
+
+Initial CG objective value: -34609872.880532674
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+1              -34609872.880532674           0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+2              -34609872.87993454            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+3              -34609872.85043591            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+4              -34609872.87986842            0.0                           0.0                           
+CG iter        IA obj. value                 max slack value IA            sum slack values IA           
+5              -34609872.87991693            0.0                           0.0                           
+Iteration limit
+New columns added: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+number of minlp subproblems solved during CG: 30
+
+=======================================================
+CG relaxation obj. value in iter 20: -34609872.87991693
+
+Time used for CG: --72.36-- seconds
+-------------------------------------------------
+Used time at CG iter 20: --10131.08-- seconds
+-------------------------------------------------
+
+Num of MINLP subproblems solved in iter loop *20*   30
+Total number of minlp subproblems solved in iter 20: 3214
+Total number of columns in iter 20: 4241
+Columns in blocks in iter 20: [43, 41, 41, 42, 27, 30, 31, 31, 53, 46, 54, 47, 13, 14, 12, 17, 66, 86, 82, 61, 81, 78, 52, 94, 84, 61, 97, 77, 78, 92, 83, 75, 93, 78, 81, 92, 81, 82, 79, 77, 77, 105, 94, 71, 127, 91, 67, 104, 73, 79, 90, 86, 64, 48, 50, 78, 52, 63, 69, 43, 69, 73, 52, 64, 0]
+Time used for CG in iter 20: --72.36-- seconds
+Total time used in iter 20: --72.36-- seconds
+------------------------------------
+CG regarding all blocks
+Time used for CG for all blocks: --119.0-- seconds
+-----------------------------------------------------
+Used time: --10250.08-- seconds
+-----------------------------------------------------
+iteration limit
+
+Total time:                                       10250.134345531464            
+
+Reformulation time:                               447.3546140193939             
+Decomposition time:                               0.5468418598175049            
+Containers time:                                  446.8077721595764             
+
+Primal bound:                                     -60415041.49045231            
+
+Number of CG iterations:                          102                           
+CG relaxation obj. value:                         -34609872.87991693            
+Number of MINLP subproblems:                      3278                          
+Number of unfixed NLP subproblems:                3890                          
+Number of fixed NLP subproblems:                  3839                          
+Number of solved sub-problems after CG:           11007                         
+Number of columns after CG:                       4248                          
+CG Gap (CG relaxation and primal bound):          42.7131521785                 
+Total number of columns:                          4248                          
