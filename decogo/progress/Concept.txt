@@ -354,6 +354,14 @@ Devide the concept into activities.
 19.01.2022      Design Experiments (Different amount of training/test data & leaving out data (e.g from ia_init, approx colgen))
                 start working on evaluator (first -> proposal in concept file)
 
+09.02.2022      Implemented ML_ColGen which replaces "generate_column" (see Paper: AddCol)
+                ML_ColGen runs Surrogate in main iteration and calls the global solver only if needed
+                check speed (reduced runtime)
+                vary alpha (hotellings_t2)
+                change architechture of NN
+
+14.02.2022      Test ML_ColGen on other models, which are more complex -> compare runtime and quality of result (obj_value)
+
 7 plan & milestones: (2 days per week)
 -----------------------------------------------------------
 

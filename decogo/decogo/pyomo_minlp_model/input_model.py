@@ -1017,12 +1017,12 @@ class PyomoSubProblems(SubProblemsBase):
     def get_scaler(self):
         return self.surrogate_model.scaler
 
-    def ml_update(self, block_id, training_data):
-        return self.surrogate_model.update_model(block_id, training_data)
+    def ml_update(self, block_id, dir_orig_space, feasible_point):
+        return self.surrogate_model.update_model(block_id, dir_orig_space, feasible_point)
 
     def get_training_data(self, block_id):
         return self.surrogate_model.X_train[block_id], self.surrogate_model.y_train[block_id], \
                     self.surrogate_model.X_validation[block_id], self.surrogate_model.y_validation[block_id]
 
-    def add_train_data(self, block_id, training_data):
-        return self.surrogate_model.add_train_data(block_id, training_data)
+    def add_train_data(self, block_id, dir_orig_space, feasible_point):
+        return self.surrogate_model.add_train_data(block_id, dir_orig_space, feasible_point)

@@ -35,7 +35,7 @@ if __name__ == '__main__':
         file.write('cg_sub_gradient_max_iter = 3\n')
         file.write('decomp_estimate_var_bounds = False\n')
         file.write('cg_normalize_duals = False\n')
-        file.write('cg_max_main_iter = 20\n')  # main iteration limit
+        file.write('cg_max_main_iter = 1\n')  # main iteration limit
         # ========================= primal heuristics =========================
         file.write('cg_find_solution = False \n')
         file.write('cg_find_sol_mip_pool = ' + str(pool_size) + '\n')

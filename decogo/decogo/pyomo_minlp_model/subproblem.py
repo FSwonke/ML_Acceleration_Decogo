@@ -506,29 +506,31 @@ class SurrogateModel:
 
             # split training_data into input/output
             X, y = self.split_data(block_id, training_data, shuffle_data=False)
+            print('Train split method')
+            print('X shape', X.shape)
+            print('y shape', y.shape)
+            # setting up hyperparameters for NN depending on number of binaries
+            num_bin = min(30, len(bin_index)-1)
 
+            epochs = min(500, 50*len(bin_index)+50)
+            if len(bin_index) > 1:
+                loss = 'categorical_crossentropy'
+                activation = 'sigmoid'
+            else:
+                loss = 'binary_crossentropy'
+                activation = 'sigmoid'
 
-            # portioning data
-            p_list = phase[0]
-            p = np.arange(p_list)
-
-            #X = np.delete(X, p, axis=0)
-            #y = np.delete(y, p, axis=0)
-
-            # settings for NN depending on number of binaries
-            num_bin = min(30, 5*len(bin_index))
-            epochs = min(1000, 50*len(bin_index)+300)
-
-            #train_set += min(round(X.shape[0]*0.8)-train_set, len(bin_index)*5)
-            train_ratio = round(train_set / X.shape[0], 1)
+            train_ratio = round(train_set / X.shape[0], 2)
 
             # seperate to train & test set (training set is last added data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_ratio,
-                                                                shuffle=True)
+                                                                shuffle=False)
+            print('training shape ', X_train.shape)
+            print('test shape', X_test.shape)
+            X_val = X_test[:10, :]
+            y_val = y_test[:10, :]
             self.X_validation[block_id] = X_test
             self.y_validation[block_id] = y_test
-
-            print('Hidden Layers: ', num_bin, '+', num_bin)
 
             self.clf_batch[block_id] = Sequential()
 
@@ -536,39 +538,50 @@ class SurrogateModel:
             self.clf_batch[block_id].add(Dense(X_train.shape[1], input_dim=X_train.shape[1]))
 
             # Hidden Layer
-            self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
-            self.clf_batch[block_id].add(Dropout(rate=0.5))
+            #self.clf_batch[block_id].add(Dense(num_bin, activation='sigmoid'))
+            #self.clf_batch[block_id].add(Dropout(rate=0.3))
             #self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
-            #self.clf_batch[block_id].add(Dropout(rate=0.5))
+            #self.clf_batch[block_id].add(Dropout(rate=0.3))
 
             # Output Layer
-            self.clf_batch[block_id].add(Dense(y_train.shape[1], activation='sigmoid'))
+            self.clf_batch[block_id].add(Dense(y_train.shape[1], activation=activation))
 
             # Settings
-            self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adam',
-                                             metrics=[tf.keras.metrics.Accuracy()])
+            self.clf_batch[block_id].compile(loss=loss, optimizer='adam',
+                                             metrics=['acc'])
 
             #scale data (standardize)
             self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
-            X_scaled = self.scaler[block_id].transform(X_train)
+            X_tr_scaled = self.scaler[block_id].transform(X_train)
+            X_val_scaled = self.scaler[block_id].transform(X_val)
             # add to attributes
             self.X_train[block_id] = X_train
             self.y_train[block_id] = y_train
             #self.X_validation[block_id] = X_test
             #self.y_validation[block_id] = y_test
             print('fit model to block:', block_id)
-            model = self.clf_batch[block_id].fit(X_scaled, y_train, epochs=epochs, verbose=0)
+            model = self.clf_batch[block_id].fit(X_tr_scaled, y_train,
+                                                 validation_data=(X_val_scaled, y_val), epochs=epochs, verbose=0)
 
             #Plot training progress
-            plt.figure(figsize=(7, 5), dpi=200)
-            plt.title('Block_'+str(block_id))
-            plt.plot(model.history['loss'], label='Loss')
-            plt.plot(model.history['accuracy'], label='Accuracy')
+            plt.figure(figsize=(14, 5), dpi=200)
+
+            plt.subplot(1, 2, 1)
+            plt.title('Loss')
+            plt.plot(model.history['loss'], label='Train')
+            plt.plot(model.history['val_loss'], label='Validation')
+            plt.legend()
+            plt.xlabel('epochs')
+            plt.grid()
+            plt.subplot(1, 2, 2)
+            plt.title('Accuracy')
+            plt.plot(model.history['acc'], label='Train')
+            plt.plot(model.history['val_acc'], label='Validation')
             plt.legend()
             plt.xlabel('epochs')
             #plt.ylim(0, 1)
             plt.grid()
-            plt.savefig('Acc&Loss_block_'+str(block_id))
+            plt.savefig('Acc&Loss_block_'+str(block_id)+'test_set'+str(train_set)+'.png', format='png',dpi=200)
         else:
             print('no binary variables in block', block_id)
 
@@ -584,7 +597,9 @@ class SurrogateModel:
         # predict method
         pred = self.clf_batch[block_id].predict(transformed_direction)
         # rounding
+        print('unrounded prediction', pred)
         prediction = np.around(pred)
+        print('rounded prediction', prediction)
 
         return prediction
 
@@ -649,7 +664,7 @@ class SurrogateModel:
             y = y[n_train:y.shape[0], :]
 
         if shuffle_data:
-            X, y = shuffle(X, y, random_state=0)
+            X, y = shuffle(X, y, random_state=42)
 
         return X, y
 
@@ -700,7 +715,7 @@ class SurrogateModel:
         score_var = np.var(score_arr)
         return (score_mean, score_var)
 
-    def update_model(self, block_id, training_data):
+    def update_model(self, block_id, dir_orig_space, feasible_point):
         '''
         update Surrogate Model with new data only
         :param
@@ -708,17 +723,29 @@ class SurrogateModel:
         print('')
         print('>>>>>Updating<<<<<')
         print('')
-        X, y = self.split_data(block_id, training_data, shuffle_data=False)
-        X_last = X[-1, :].reshape(1, -1)
-        y_last = y[-1, :].reshape(1, -1)
+        X = dir_orig_space
 
-        self.clf_batch[block_id].compile(loss='binary_crossentropy', optimizer='adam',
-                                         metrics=[tf.keras.metrics.Accuracy()])
-        self.clf_batch[block_id].fit(X_last, y_last, epochs=50, verbose=0)
+        X_scaled = self.scaler[block_id].transform(X)
+        y = feasible_point
 
-    def add_train_data(self, block_id, training_data):
-        X, y = self.split_data(block_id, training_data, shuffle_data=False)
-        last_X = X[-1, :].reshape(1, -1)
-        last_y = y[-1, :].reshape(1, -1)
+        bin_index = self.binary_index[block_id]
+        if len(bin_index) > 1:
+            loss = 'categorical_crossentropy'
+        else:
+            loss = 'binary_crossentropy'
+        self.clf_batch[block_id].compile(loss=loss, optimizer='adam',
+                                         metrics=['acc'])
+        self.clf_batch[block_id].fit(X_scaled, y, epochs=100, verbose=0)
+
+    def add_train_data(self, block_id, dir_orig_space, feasible_point):
+
+        last_X = dir_orig_space.reshape(1, -1)
+        bin_index = self.binary_index[block_id]
+        last_y = []
+        for i in bin_index:
+            last_y.append(i)
+        last_y = np.array(last_y)
+        last_y = last_y.reshape(1, -1)
+
         self.X_train[block_id] = np.concatenate((self.X_train[block_id], last_X), axis=0)
         self.y_train[block_id] = np.concatenate((self.y_train[block_id], last_y), axis=0)
