@@ -334,6 +334,20 @@ Please list any other tests that need to be executed. Examples:
 * Performance tests on a dedicated environment to measure the speed up achieved by a feature.
 * Profiling, Memory tests
 
+Final Experiment - Testing quality of Surrogate model
+High quality columns are only required in the beginning and at the end of the iterations
+within it is desired to avoid calling global solver to often to save time, because HQ-columns are not necessary 
+- Control test run -> w/o Surrogate Model for comparison (exact_solve_data = True/False?, cg_fast_fw  = True/False, cg_fast_approx = True/False, cg_find_solution = True/False)
+- Test run w/ Surrogate Model & different alpha
+- Test run w/ Surrogate Model & different Parameters (alpha & counter)
+    Parameter 1: alpha (level of significance of hotellings_t2)
+    Parameter 2: counter for global solver (e.g. only after n iterations the global solver is called)
+        -> counter has to be implemented
+        variation 1: after n iterations global solver is called
+        variation 2: only if in the last n iterations anomaly was detected global solver is called
+        variation 3: anomaly detection still decides wheter to call global solver, but can only call every n iterations
+    (Parameter 3: training size -> influences PCA and Anomaly detection, but from previous experiments: rather take bigger training set)
+
 6 Activity descriptions: coding, documentation and testing
 ----------------------------------------------------------
 
@@ -372,6 +386,7 @@ Devide the concept into activities.
 * implement evaluator (anormly detection & test)                                                                   2021.12 - 2022.1 (2 weeks)
 
 * tune overall ml-sub-solving (test & tune surrogate model/anormly detection model & extra test of algorithm )     2022.1 - 2022.2 (4 weeks)
+
 
 
 

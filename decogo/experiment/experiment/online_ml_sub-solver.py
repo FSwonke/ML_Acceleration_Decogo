@@ -185,6 +185,7 @@ class StreamBatchData:
             y_clf_new = clf.predict(x_new)
             print('y_clf_new',y_clf_new)
             y_clf_new = y_clf_new.reshape(1, -1)
+
             y_pred_index.append(m)
             if y_pred_val is not None:
                 y_pred_val = np.concatenate((y_pred_val,

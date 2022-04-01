@@ -236,7 +236,7 @@ class RefactoryColGen:
             num_subproblems_solved = self.result.cg_num_minlp_problems
 
             tic = time.time()
-            print('Column Generation')
+            print('Column Generation reduced block set')
             self.column_generation(hat_k_set)
 
             time_column_generation = round(time.time() - tic, 2)
@@ -1624,6 +1624,7 @@ class RefactoryColGen:
 
             self.n_subproblems_main[block_id] += 1
             # ml sub solve
+            #elif if self.settings.activate_ml_colgen:
             '''
             bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
             

@@ -99,7 +99,7 @@ _setting_names_default_val = \
      # ml-based acceleration
      'exact_solve_data': True,  # enable sub_problem data with exact solver
      # ml on
-     'activate_ml_colgen': True,     # activates ml_colgen
+     'ml_sub_solve': False,     # activates ml_colgen
      # if true
 
      }
