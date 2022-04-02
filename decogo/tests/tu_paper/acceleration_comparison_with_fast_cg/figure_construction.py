@@ -34,7 +34,7 @@ def parse_files_construct_table(instances, logs_path_name='tests/solver/colgen')
             break
         else:
             root_name = os.path.dirname(root_name)
-
+    print(logs_path_name)
     logs_path = os.path.join(root_name, logs_path_name)
 
     total_time_cg_bound = {}

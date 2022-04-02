@@ -491,7 +491,7 @@ class SurrogateModel:
         self.X_validation = {}
         self.y_validation = {}
 
-    def init_train(self, block_id, training_data, phase, train_set):
+    def init_train(self, block_id, training_data, phase, split):
         '''Method for initial training of the Surrogate Model
         :param: block_id
         :type: int
@@ -520,10 +520,10 @@ class SurrogateModel:
                 loss = 'binary_crossentropy'
                 activation = 'sigmoid'
 
-            train_ratio = round(train_set / X.shape[0], 2)
-
+            #train_ratio = round(train_set / X.shape[0], 2)
+            #train_test_ratio = split
             # seperate to train & test set (training set is last added data
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=train_ratio,
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split,
                                                                 shuffle=False)
             print('training shape ', X_train.shape)
             print('test shape', X_test.shape)
@@ -581,7 +581,7 @@ class SurrogateModel:
             plt.xlabel('epochs')
             #plt.ylim(0, 1)
             plt.grid()
-            plt.savefig('Acc&Loss_block_'+str(block_id)+'test_set'+str(train_set)+'.png', format='png',dpi=200)
+            plt.savefig('Acc&Loss_block_'+str(block_id)+'test_set'+str(split)+'.png', format='png', dpi=200)
         else:
             print('no binary variables in block', block_id)
 
@@ -597,9 +597,8 @@ class SurrogateModel:
         # predict method
         pred = self.clf_batch[block_id].predict(transformed_direction)
         # rounding
-        print('unrounded prediction', pred)
         prediction = np.around(pred)
-        print('rounded prediction', prediction)
+
 
         return prediction
 
@@ -743,7 +742,7 @@ class SurrogateModel:
         bin_index = self.binary_index[block_id]
         last_y = []
         for i in bin_index:
-            last_y.append(i)
+            last_y.append(feasible_point(i))
         last_y = np.array(last_y)
         last_y = last_y.reshape(1, -1)
 

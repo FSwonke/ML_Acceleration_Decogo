@@ -4,6 +4,7 @@ import copy
 import logging
 import math
 import time
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -69,6 +70,8 @@ class RefactoryColGen:
         self.Acc_NN = {}
         self.type2 = {}
 
+        self.start_ml = False
+        self.init_train_done = {}
         # initiation of lists for phase list
         for k in range(self.problem.block_model.num_blocks):
             self.phase_list[k] = []
@@ -98,16 +101,14 @@ class RefactoryColGen:
             self.Acc_NN[k] = []
             self.type2[k] = []
 
+            self.init_train_done[k] = False
+
     def solve(self):
         """
         Inner approximation algorithm
         """
 
         self.ia_init()
-        print('=======================')
-        print('IA_init done')
-        print('=======================')
-
 
         # initial column generation
         tic_init_cg = time.time()
@@ -118,16 +119,24 @@ class RefactoryColGen:
             tic = time.time()
 
             # option to generate sub-problem data with exact solver
+            logger.info('CG with ML: {0} '
+                        .format(self.settings.ml_sub_solve))
+            logger.info('CG approx: {0} '
+                        .format(self.settings.exact_solve_data))
             if self.settings.exact_solve_data is False:
-                self.column_generation(approx_solver=True)  # solve sub-problems
+                if self.settings.ml_sub_solve is False:
+                    self.column_generation(approx_solver=True)  # solve sub-problems
+                else:
+                    self.column_generation_ml(approx_solver=True)
                 # approximately
             else:
-                self.column_generation()  # solve sub-problems exactly
+                if self.settings.ml_sub_solve is False:
+                    self.column_generation()  # solve sub-problems exactly
+                else:
+                    self.column_generation_ml()
             # approximately
 
-            print('=======================')
-            print('Approx Colgen done')
-            print('=======================')
+            logger.info('Approx ColGen done')
 
             time_cg = round(time.time() - tic, 2)
             logger.info('Time used for init CG '
@@ -166,14 +175,28 @@ class RefactoryColGen:
             j += 1
             tic = time.time()
 
+            logger.info('CG with ML: {0} '
+                        .format(self.settings.ml_sub_solve))
+            logger.info('CG fast FW: {0} '
+                        .format(self.settings.cg_fast_fw))
+
             if self.settings.cg_fast_fw:
-                self.column_generation_fast_fw()
+                if self.settings.ml_sub_solve is False:
+                    self.column_generation_fast_fw()
+                else:
+                    self.column_generation_fast_fw_ml()
+
                 time_init_cg = round(time.time() - tic, 2)
                 logger.info('Time used for init cg fast fw '
                             'in iter {0}: --{1}-- seconds'
                             .format(j, time_init_cg))
+
             else:
-                self.column_generation(approx_solver=True)
+                if self.settings.ml_sub_solve is False:
+                    self.column_generation(approx_solver=True)
+                else:
+                    self.column_generationml(approx_solver=True)
+
                 time_init_cg = round(time.time() - tic, 2)
                 logger.info('Time used for init approx cg '
                             'in iter {0}: --{1}-- seconds'
@@ -226,7 +249,7 @@ class RefactoryColGen:
             print('=====================================================')
             print('                 main iteration                      ')
             print('=====================================================')
-
+            self.start_ml = True
             self.result.main_iterations += 1
             print('iteration', self.result.main_iterations)
 
@@ -236,8 +259,13 @@ class RefactoryColGen:
             num_subproblems_solved = self.result.cg_num_minlp_problems
 
             tic = time.time()
-            print('Column Generation reduced block set')
-            self.column_generation(hat_k_set)
+
+            logger.info('CG with ML: {0} '
+                        .format(self.settings.ml_sub_solve))
+            if self.settings.ml_sub_solve is False:
+                self.column_generation(hat_k_set)
+            else:
+                self.column_generation_ml(hat_k_set)
 
             time_column_generation = round(time.time() - tic, 2)
             logger.info('CG relaxation obj. value in iter {0}: {1}'
@@ -297,13 +325,10 @@ class RefactoryColGen:
 
                 if self.problem.block_model.sub_models[k].linear is False:
 
-                    #fpoint, _, delta_k, new_point, _ = \
-                        #self.generate_column(k, reduced_cost_direction)
-                    '''
-                    feasible_point, primal_bound, delta_k, \
-                    new_point, _ 
-                    '''
-                    fpoint, _, delta_k, _, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia)
+                    if self.settings.ml_sub_solve is False:
+                        fpoint, _, delta_k, new_point, _ = self.generate_column(k, reduced_cost_direction)
+                    else:
+                        fpoint, _, delta_k, _, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia)
 
                     if delta_k <= -1e-3:
                         hat_k_set.append(k)
@@ -339,17 +364,13 @@ class RefactoryColGen:
                             # down everything too much maybe here is better
                             # to use just stricter settings for SCIP
 
-                            #fpoint, _, delta_k, new_point, _ = \
-                                #self.generate_column(k,
-                                                     #reduced_cost_direction,
-                                                     #heuristic=False)
-                            '''
-                            feasible_point, primal_bound, delta_k,\
-                                new_point, _ \
-                            '''
-                            fpoint, _, delta_k, _, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia)
+                            if self.settings.ml_sub_solve is False:
+                                fpoint, _, delta_k, new_point, _ = \
+                                    self.generate_column(k, reduced_cost_direction, heuristic=False)
 
-                            #'''
+                            else:
+                                fpoint, _, delta_k, _, _ = self.generate_column_ml(k, reduced_cost_direction,
+                                                                          x_ia=x_ia, heuristic=False)
 
                             if delta_k <= -1e-3:
                                 hat_k_set.append(k)
@@ -413,9 +434,11 @@ class RefactoryColGen:
         print('subproblems in main iteration')
         print(self.n_subproblems_main)
         k=0
+        instances = ['Test', 'FW_exact', 'Decogo_wo_ml']
+        logs_path_name ='tests/solver/refactory_colgen'
+        self.parse_files_construct_table(instances=instances, logs_path_name=logs_path_name)
 
-
-        self.testing()
+        #self.testing()
 
     def ia_init(self, duals=None):
         """Initialization of inner outer approximation
@@ -504,10 +527,6 @@ class RefactoryColGen:
                                 max_slack_value, sum_slack_values))
 
             reduced_cost_direction = np.concatenate(([1], duals))
-            #print('=============INFO==================================')
-            #print('dict training data self.tdata:')
-            #print(self.tdata)
-            #if i == 4:
 
             # generate new columns
             generate_column_time_list = {}
@@ -516,7 +535,7 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
-                '''
+                #'''
                 _, _, reduced_cost_list[k], new_point, _ = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
@@ -527,7 +546,7 @@ class RefactoryColGen:
                                                   approx_solver=approx_solver)
 
 
-                #'''
+                '''
                 generate_column_time_list[k] = round(time.time() - tic, 2)
                 if new_point is True:
                     new_columns_generated[k] += 1
@@ -554,7 +573,7 @@ class RefactoryColGen:
                                                  x_k=x_ia.get_block(k))
                         '''
                         fpoint, _, _, \
-                            new_point, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia,
+                            new_point, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia,
                                                       approx_solver=approx_solver)
 
 
@@ -675,13 +694,13 @@ class RefactoryColGen:
                         self.local_solve_subproblem(
                             k, direction, x_k=x_ia.get_block(k))
                 else:
-                    #_, _, reduced_cost_list[k], new_point, r_k = \
-                     #   self.generate_column(k, direction)
-
+                    _, _, reduced_cost_list[k], new_point, r_k = \
+                        self.generate_column(k, direction)
+                    '''
                     _, _, reduced_cost_list[k], new_point, r_k = \
                         self.ML_ColGen(k,direction, heuristic=True,
                             approx_solver=False, x_ia=x_ia)
-
+                    '''
                     generate_column_time_list[k] = round(time.time() - tic,
                                                      2)
                 if r_k is not None:
@@ -924,16 +943,6 @@ class RefactoryColGen:
                     block_id, direction, heuristic=heuristic)
 
         reduced_cost = round(reduced_cost, 3)
-        dir_orig_space = \
-            self.problem.block_model.trans_into_orig_space(block_id,
-                                                           direction)
-        #bin_index = self.problem.binary_index[block_id]
-        # store data for the ML-Model
-        #self.problem.training_data(block_id, dir_orig_space, feasible_point)
-        # check, if get_size_training_data method works
-        #len_data = self.problem.get_size_training_data(block_id)
-        #print('length data: ', len_data, 'in block:', block_id)
-        #self.ndata[block_id] = len_data
 
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
@@ -1141,10 +1150,10 @@ class RefactoryColGen:
         for k in range(self.problem.block_model.num_blocks):
             logger.info('block {0}: {1}'.format(k, non_zero_z[k]))
 
-    def init_ML(self, block_id, train_set):
+    def init_ML(self, block_id, split):
         training_data = self.problem.get_training_data()
         phase = self.phase_list[block_id]
-        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data, phase, train_set)
+        return self.problem.sub_problems[block_id].ml_sub_solver_init_train(block_id, training_data, phase, split)
 
     def update_Surrogate_Model(self, block_id):
         training_data = self.problem.get_training_data()
@@ -1293,7 +1302,7 @@ class RefactoryColGen:
 
         T_tr, T_n, n_components = self.anomaly_detection(block_id, X_train, dir_orig_space)
 
-        alpha = self.alpha
+        alpha = 0.05 #self.alpha
         df = n_components
         t2_bool = self.hotellings_t2(block_id=block_id, T=T_tr, x_n=T_n, n_components=n_components, alpha=alpha, df=df)
         # SPE (Squared Prediction Error)
@@ -1403,7 +1412,7 @@ class RefactoryColGen:
         self.t_score[block_id] = T_score
         # score of the new direction normalized value of score
         y_score = (y_n - mean) ** 2 / var
-        print('y_score',y_score)
+
         anomaly_score_threshold = stats.chi2.ppf(q=(1 - alpha), df=df)
         k = 0
         t2_bools = []
@@ -1427,10 +1436,6 @@ class RefactoryColGen:
             t2_bool = 1
         else:
             t2_bool = 0
-
-        print('T2: ', t2)
-        print('p value chi2: ', anomaly_score_threshold)
-        print('outlier 1 True; 0 False: ', t2_bool)
 
         return t2_bool
 
@@ -1519,7 +1524,7 @@ class RefactoryColGen:
             f.write(""+'\n')
             f.close()
 
-    def ML_ColGen(self, block_id, direction, heuristic=True,
+    def generate_column_ml(self, block_id, direction, heuristic=True,
                         approx_solver=False, x_ia=None):
         """Generates the inner point (and corresponding column) either
         with MINLP sub-problem or with NLP sub-problem (too heuristically);
@@ -1542,8 +1547,22 @@ class RefactoryColGen:
         corresponding column
         :rtype: tuple
         """
+        activate_ml = False
+        split = 0.1 # number of samples used for training
 
-        if self.result.main_iterations == 0:
+        if self.settings.ml_sub_solve:
+            if self.start_ml and self.init_train_done[block_id] is False:
+                self.init_ML(block_id, split)
+                self.init_train_done[block_id] = True
+                activate_ml = True
+            elif self.start_ml:
+                activate_ml = True
+        #if self.result.main_iterations == 0:
+
+        if activate_ml: #CG with Surrogate Model
+            feasible_point, primal_bound, reduced_cost, is_new_point, column = \
+                self.ML_ColGen(block_id, direction, x_ia)
+        else:
             if approx_solver:  # approximate solve minlp subproblem
                 feasible_point, primal_bound, reduced_cost, is_new_point, \
                  column = self.local_solve_subproblem(
@@ -1565,20 +1584,20 @@ class RefactoryColGen:
                      column = self.global_solve_subproblem(
                         block_id, direction, heuristic=heuristic)
 
-            reduced_cost = round(reduced_cost, 3)
+        reduced_cost = round(reduced_cost, 3)
 
-            dir_orig_space = \
-                self.problem.block_model.trans_into_orig_space(block_id,
-                                                               direction)
+        dir_orig_space = \
+            self.problem.block_model.trans_into_orig_space(block_id,
+                                                           direction)
 
-            # store data for the ML-Model
-            self.problem.training_data(block_id, dir_orig_space, feasible_point)
+        # store data for the ML-Model
+        self.problem.training_data(block_id, dir_orig_space, feasible_point)
 
-            # check, if get_size_training_data method works
-            len_data = self.problem.get_size_training_data(block_id)
-            print('length data: ', len_data, 'in block:', block_id)
+        # check, if get_size_training_data method works
+        #len_data = self.problem.get_size_training_data(block_id)
+        #print('length data: ', len_data, 'in block:', block_id)
 
-
+        '''
         else:
 
             # accumulating data from global solver as validation data
@@ -1625,18 +1644,18 @@ class RefactoryColGen:
             self.n_subproblems_main[block_id] += 1
             # ml sub solve
             #elif if self.settings.activate_ml_colgen:
-            '''
-            bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
             
-            update_model, _, _, _, is_new_point, _ = self.eval_prediction(block_id=block_id, dir_im_space=direction,
-                                                                           y_clf=bin_pred,
-                                                                           x_ia=x_ia,
-                                                                           binary_index=bin_index)
+        bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
+        
+        update_model, _, _, _, is_new_point, _ = self.eval_prediction(block_id=block_id, dir_im_space=direction,
+                                                                       y_clf=bin_pred,
+                                                                       x_ia=x_ia,
+                                                                       binary_index=bin_index)
+        
+        #if update_model:
+            #self.init_ML(block_id)
+            #self.update_Surrogate_Model(block_id)
             
-            #if update_model:
-                #self.init_ML(block_id)
-                #self.update_Surrogate_Model(block_id)
-            '''
 
 
         if self.X_main_array[block_id] is None:
@@ -1651,7 +1670,364 @@ class RefactoryColGen:
         len_data = self.problem.get_size_training_data(block_id)
         #self.X_main[block_id].append((len_data, direction))
         self.x_ia[block_id].append((len_data, x_ia))
+        '''
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
+
+    def column_generation_ml(self, subset_of_blocks=None, approx_solver=False):
+        """Performs column generation steps with surrogate model
+
+        :param subset_of_blocks: apply column generation for reduced block set
+        :type subset_of_blocks: list or None
+        :param approx_solver: enables approximate solving of subproblems in \
+        column generation
+        :type approx_solver: bool
+        :return: Dual solution from IA master problem regarding global \
+        constraints
+        :rtype: ndarray
+        """
+        logger.info('\n=======================================================')
+        if approx_solver:
+            logger.info('Column generation: approximated subproblem solving')
+        else:
+            logger.info('Column generation')
+        new_columns_generated = [0] * self.problem.block_model.num_blocks
+        num_minlp_problems_solved = self.result.cg_num_minlp_problems
+
+        if subset_of_blocks is not None:
+            blocks = subset_of_blocks
+        else:
+            blocks = {k for k in range(self.problem.block_model.num_blocks)
+                      if self.problem.block_model.sub_models[k].linear is False}
+
+        i = 0
+
+        while True:
+
+            z, x_ia, w_ia, slacks, duals, obj_value_ia = \
+                self.problem.master_problems.solve_ia(self.settings.lp_solver)
+            print('=======x_ia========')
+            #print(x_ia)
+            #print(type(x_ia[0, :]))
+            #print(x_ia[0, :])
+            self.result.cg_relaxation = obj_value_ia
+            if i == 0:
+                initial_obj_value_ia = obj_value_ia
+                logger.info('\nInitial CG objective value: {0}'.format(
+                    self.result.sense * initial_obj_value_ia))
+
+            max_slack_value = max(max(item) for item in slacks)
+            sum_slack_values = sum(item[0] + item[1] for item in slacks)
+
+            i += 1
+
+            logger.info('{0: <15}{1: <30}{2: <30}'
+                        '{3: <30}'.format('CG iter', 'IA obj. value',
+                                          'max slack value IA',
+                                          'sum slack values IA'))
+
+            logger.info('{0: <15}{1: <30}{2: <30}''{3: <30}'
+                        .format(i, self.result.sense *
+                                self.result.cg_relaxation,
+                                max_slack_value, sum_slack_values))
+
+            reduced_cost_direction = np.concatenate(([1], duals))
+            #print('=============INFO==================================')
+            #print('dict training data self.tdata:')
+            #print(self.tdata)
+            #if i == 4:
+
+            # generate new columns
+            generate_column_time_list = {}
+            reduced_cost_list = {}
+
+            # generate columns according to dual values
+            for k in blocks:
+                tic = time.time()
+                '''
+                _, _, reduced_cost_list[k], new_point, _ = \
+                    self.generate_column(k, reduced_cost_direction,
+                                         approx_solver=approx_solver,
+                                         x_k=x_ia.get_block(k))
+                '''
+                fpoint, _, reduced_cost_list[k], \
+                    new_point, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia,
+                                                  approx_solver=approx_solver)
+
+
+                #'''
+                generate_column_time_list[k] = round(time.time() - tic, 2)
+                if new_point is True:
+                    new_columns_generated[k] += 1
+
+            # generate columns according to non-zero slacks
+            generate_column_slack_time_list = {}
+            if max_slack_value > 1e-1:
+
+                z, x_ia, w_ia, slacks, duals, obj_value_ia = \
+                    self.problem.master_problems.solve_ia(
+                        self.settings.lp_solver)
+                self.result.cg_relaxation = obj_value_ia
+                max_slack_value = max(max(item) for item in slacks)
+
+                if max_slack_value > 1e-1:
+
+                    slack_direction = self.get_slack_directions(slacks)
+                    for k in blocks:
+                        tic = time.time()
+                        '''
+                        _, _, _, new_point, _ = \
+                            self.generate_column(k, slack_direction,
+                                                 approx_solver=approx_solver,
+                                                 x_k=x_ia.get_block(k))
+                        '''
+                        fpoint, _, _, \
+                            new_point, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia,
+                                                      approx_solver=approx_solver)
+
+
+                        generate_column_slack_time_list[k] = \
+                            round(time.time() - tic, 2)
+                        if new_point is True:
+                            new_columns_generated[k] += 1
+
+
+            if i >= self.settings.cg_max_iter:
+                logger.info('Iteration limit')
+                # logger.info('Reduced cost: {0}'
+                #             .format(str(reduced_cost_list)))
+                logger.info('New columns added: {0}'
+                            .format(str(new_columns_generated)))
+                break
+
+            if all([item >= -1e-6 for item in
+                    reduced_cost_list.values()]) is True:
+                logger.info('Reduced costs greater than zero')
+                logger.info('New columns added: {0}'
+                            .format(str(new_columns_generated)))
+                break
+
+        self.result.num_cg_iterations += i
+
+        # number of MINLP subproblems during CG
+        logger.info(
+            'number of minlp subproblems '
+            'solved during CG: {0}'.format(self.result.cg_num_minlp_problems -
+                                           num_minlp_problems_solved))
+        logger.info('\n=======================================================')
+        return duals
+
+    def column_generation_fast_fw_ml(self):
+        """ Performs fast FW column generation steps with surrogate model """
+        logger.info('---------------------------------------------------------')
+        logger.info('Fast column generation')
+
+        start_time = time.time()
+
+        # solve ia master problem
+        z, x_ia, w_ia, slacks, duals, obj_value_ia = \
+            self.problem.master_problems.solve_ia(self.settings.lp_solver)
+        self.result.cg_relaxation = obj_value_ia
+
+        direction = np.concatenate(([1], duals))
+
+        # it is always good idea to have a look at the existing code and
+        # make the code as simple as possible to read
+        tilde_w = BlockVector()
+        for k in range(self.problem.block_model.num_blocks):
+            if self.problem.block_model.sub_models[k].linear is False:
+                column, _ = self.problem.get_min_column(k, direction)
+                tilde_w.set_block(k, column)
+            else:
+                tilde_w.set_block(k, w_ia.get_block(k))
+
+        v_plus = copy.copy(tilde_w)
+
+        # todo: refactor this, make use of BlockVector,
+        # if neccessary extend BlockVector class
+        for j, (index, vector) in enumerate(tilde_w.vectors.items()):
+            if j == 0:
+                tilde_w_array = np.array(vector.reshape(1, len(vector)))
+            else:
+                tilde_w_array = \
+                    np.concatenate((tilde_w_array,
+                                    vector.reshape(1, len(vector))))
+
+        for j, (index, vector) in enumerate(v_plus.vectors.items()):
+            if j == 0:
+                v_plus_array = np.array(vector.reshape(1, len(vector)))
+            else:
+                v_plus_array = \
+                    np.concatenate((v_plus_array,
+                                    vector.reshape(1, len(vector))))
+        sigma_cg = abs(duals)
+        global_cuts_rhs = []
+        for cut in self.problem.block_model.cuts.global_cuts:
+            global_cuts_rhs.append(cut.rhs)
+        global_cuts_rhs = np.array(global_cuts_rhs)
+
+        tic_fast_cg = time.time()
+        num_unfixed_nlp_problems_solved = \
+            self.result.cg_num_unfixed_nlp_problems
+
+        gamma_cg_plus = 1
+
+        i = 0
+        logger.info('{0: <10}{1: <30}'
+                    '{2: <30}'.format('iter', 'IA obj. value', 'slacks'))
+        logger.info('{0: <10}{1: <30}'
+                    '{2: <30}'.format(i, obj_value_ia * self.result.sense,
+                                      sum(map(sum, slacks))))
+
+        if sum(map(sum, slacks)) < 1e-2:
+            logger.info('IA obj. val: {0}'.format(
+                obj_value_ia * self.result.sense))
+            logger.info('Elapsed time: {0}'.format(
+                self.result.current_used_time + (time.time() - start_time)))
+
+        new_columns_generated_cumulative = \
+            {k: 0 for k in range(self.problem.block_model.num_blocks)
+             if self.problem.block_model.sub_models[k].linear is False}
+
+        while True:
+            i += 1
+
+            generate_column_time_list = {}
+            reduced_cost_list = {}
+            r_cg = BlockVector()
+            new_columns_generated = []
+            for k in range(self.problem.block_model.num_blocks):
+                tic = time.time()
+                if self.settings.cg_fast_approx:
+                    _, _, reduced_cost_list[k], new_point, r_k = \
+                        self.local_solve_subproblem(
+                            k, direction, x_k=x_ia.get_block(k))
+                else:
+                    #_, _, reduced_cost_list[k], new_point, r_k = \
+                     #   self.generate_column(k, direction)
+
+                    _, _, reduced_cost_list[k], new_point, r_k = \
+                        self.generate_column_ml(k,direction, heuristic=True,
+                            approx_solver=False, x_ia=x_ia)
+
+                    generate_column_time_list[k] = round(time.time() - tic,
+                                                     2)
+                if r_k is not None:
+                    r_cg.set_block(k, r_k)
+                else:
+                    r_cg.set_block(k, w_ia.get_block(k))
+                # logger.info(
+                #     'added r_{0} in iter {1}'.format(k, i))
+                if new_point is True:
+                    # count in current iteration
+                    new_columns_generated.append(1)
+
+                    # cumulative count
+                    new_columns_generated_cumulative[k] += 1
+                else:
+                    new_columns_generated.append(0)
+
+            if all(item == 0 for item in new_columns_generated):
+                logger.info('No new columns generated in the current iteration')
+                break
+
+            z, x_ia, w_ia, slacks, duals, obj_value_ia = \
+                self.problem.master_problems.solve_ia(self.settings.lp_solver)
+            self.result.cg_relaxation = obj_value_ia
+
+            logger.info('\n{0: <10}{1: <30}'
+                        '{2: <30}'.format('iter', 'IA obj. value', 'slacks'))
+            logger.info('{0: <10}{1: <30}'
+                        '{2: <30}'.format(i,
+                                          obj_value_ia * self.result.sense,
+                                          sum(map(sum, slacks))))
+
+            if sum(map(sum, slacks)) < 1e-2:
+                logger.info('IA obj. val: {0}'.format(
+                    obj_value_ia * self.result.sense))
+                logger.info('Elapsed time: {0}'.format(self.result.current_used_time +
+                                               (time.time() - start_time)))
+
+            # use column
+            for j, (index, vector) in enumerate(r_cg.vectors.items()):
+                if j == 0:
+                    r_cg_array = np.array(vector.reshape(1, len(vector)))
+                else:
+                    r_cg_array = \
+                        np.concatenate((r_cg_array,
+                                        vector.reshape(1, len(vector))))
+
+            # the operations add, substract and multiplication by scalar is
+            # implemented in BlockVector class. Maybe it is easier to use them
+            # The implementation of summing the components of BlockVector
+            # can implemented and added there
+
+            # determining the step size
+            coeff_w_r_array = r_cg_array - tilde_w_array
+            coeff_a = np.multiply((np.sum(coeff_w_r_array[:, 1:], axis=0)
+                                   - global_cuts_rhs), sigma_cg)
+            coeff_a = \
+                2 * np.dot(coeff_a, np.sum(coeff_w_r_array[:, 1:], axis=0))
+            coeff_b = np.multiply(sigma_cg,
+                                  np.sum(tilde_w_array[:, 1:], axis=0))
+            coeff_b = 2 * np.dot(coeff_b,
+                                 np.sum(coeff_w_r_array[:, 1:], axis=0))
+            coeff_b += np.sum(coeff_w_r_array[:, 0], axis=0)
+
+            if coeff_a == 0:  # tilda_w equals nu_plus
+                # logger.info('tilda_w equals nu_plus')
+                break
+            else:
+                theta_cg = - coeff_b / coeff_a
+            # logger.info('theta_cg: {0}'.format(theta_cg))
+            if theta_cg == 0:
+                break
+
+            # update step
+            add_term = theta_cg * (r_cg_array - tilde_w_array)
+            v_array = copy.copy(v_plus_array)
+            v_plus_array = tilde_w_array + add_term
+            # fast FW step
+            gamma_cg = gamma_cg_plus
+            gamma_cg_plus = 0.5 * (1 + math.sqrt(4 * gamma_cg ** 2
+                                                 + 1))
+            tilde_w_array = v_plus_array + \
+                            (gamma_cg - 1) / gamma_cg_plus * \
+                            (v_plus_array - v_array)
+
+            gap = {}
+            for k in range(self.problem.block_model.num_blocks):
+                if self.problem.block_model.sub_models[k].linear is False:
+                    gap[k] = np.dot(direction, (tilde_w_array[k, :] -
+                                                r_cg_array[k, :]))
+
+            # logger.info('Value of gap (g_k):')
+            # logger.info(gap)
+
+            logger.info('Number of new columns in the current iteration:')
+            logger.info(new_columns_generated)
+
+            # update direction
+            direction = 2 * np.multiply(sigma_cg, np.sum(tilde_w_array[:, 1:],
+                                                         axis=0) -
+                                        global_cuts_rhs)
+            direction = np.concatenate(([1], direction))
+
+            if i == self.settings.cg_fast_fw_max_iter:
+                break
+
+        logger.info('\nNew columns in FastCG:')
+        logger.info(list(new_columns_generated_cumulative.values()))
+
+        # number of unfixed nlp subproblems during CG
+        logger.info('number of unfixed nlp subproblems '
+                    'solved during CG: {0}'
+                    .format(self.result.cg_num_unfixed_nlp_problems -
+                            num_unfixed_nlp_problems_solved))
+        time_fast_cg = round(time.time() - tic_fast_cg, 2)
+        logger.info('Time used for solving subproblem'
+                    ': --{0}-- seconds'.
+                    format(time_fast_cg))
+        logger.info('---------------------------------------------------------')
 
     def plot_main(self, block_id, exp_type):
         #if len(self.newpoints[block_id]) != 0:
@@ -1873,7 +2249,7 @@ class RefactoryColGen:
             ax2.legend(loc='upper right')
             plt.savefig('Block'+str(block_id)+'PC_'+str(exp_type)+'.png', dpi=200)
 
-    def ML_ColGen_test(self, block_id, direction, x_ia):
+    def ML_ColGen(self, block_id, direction, x_ia):
         '''
         :param: block_id
         :type: in
@@ -1943,7 +2319,7 @@ class RefactoryColGen:
 
                             x_ia = self.x_ia[block_id][i][1]
                             sp_start = time.time()
-                            self.ML_ColGen_test(block_id, dir_im_space, x_ia)
+                            self.ML_ColGen(block_id, dir_im_space, x_ia)
                             sp_end = time.time()
                             sp_times.append(round(sp_end-sp_start, 2))
                         # plot_main
@@ -2205,5 +2581,66 @@ class RefactoryColGen:
         plt.grid()
         plt.savefig('Times'+str(block_id)+'.png', format='png', dpi=200)
 
+    def parse_files_construct_table(self, instances, logs_path_name='tests/solver/refactory_colgen'):
 
+        root_name = os.path.dirname(os.getcwd())
+        while True:
+            base = os.path.basename(root_name)
+            if base == 'decogo':
+                break
+            else:
+                root_name = os.path.dirname(root_name)
+        print('root_name',root_name)
+        print('logs_path_name',logs_path_name)
+        logs_path = os.path.join(root_name, logs_path_name)
+
+        total_time_cg_bound = {}
+
+        for i, problem_name in enumerate(instances):
+            total_time_cg_bound[i] = []
+
+            with open(os.path.join(logs_path, problem_name + '.txt')) as log_file:
+                lines = log_file.readlines()
+
+                for k, line in enumerate(lines):
+
+                    if line.startswith('IA obj. val:') or \
+                            line.startswith('CG relaxation obj. value in iter'):
+                        #value & time from pre-main iter
+                        if line.startswith('IA obj. val:'):
+                            val = float(line.split(':')[1])
+
+                            time = float(lines[k + 1].split(':')[1])
+
+                        # value & time from main iteration
+                        if line.startswith('CG relaxation obj. value in iter'):
+                            val = float(line.split(':')[1])
+                            j = k + 1
+
+                            #while not lines[j].startswith('Used time at CG iter'):
+                            while not lines[j].startswith('Elapsed time at CG iter'):
+                                #if j == len(lines)-1:
+                                    #break
+                                #else:
+                                j += 1
+
+                            time = float(lines[j].split(':')[1].split('--')[1])
+
+                        total_time_cg_bound[i].append((time, val))
+                    #print(total_time_cg_bound[0])
+        fig = plt.figure(figsize=(6, 3.2))
+        ax = plt.gca()
+        ax.set_xlabel('Time, s')
+        ax.set_ylabel('IA objective value')
+        # remove first IA objective value
+
+        for i, problem_name in enumerate(instances):
+            print(*zip(*total_time_cg_bound[i]))
+            total_time_cg_bound[i].pop(0)
+            ax.plot(*zip(*total_time_cg_bound[i]), label=problem_name)
+
+        ax.legend()
+        plt.tight_layout()
+
+        fig.savefig('cg_relaxation.png', dpi=200, format='png')
 
