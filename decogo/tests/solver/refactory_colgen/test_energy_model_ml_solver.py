@@ -47,7 +47,7 @@ if __name__ == '__main__':
         # solving in fast CG
         file.write('exact_solve_data = False\n')  # using exact sub-problem solving
         # in calculating the first feasible solution (approx colgen)
-        file.write('ml_sub_solve = False\n')   # activates Surrogate Model
+        file.write('ml_sub_solve = True\n')   # activates Surrogate Model
         # ===================================================================
         file.write('user_defined_input_model = True\n')
         # switch on user-defined input model
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # sub-problems and original problems (primal heuristics)
     for i in range(1, n_runs + 1):
         solver = DecogoSolver()
-        file_name = 'Decogo_wo_ml.txt'.format()
+        file_name = 'ML_start_in_FW.txt'.format()
         '''
         'DESS_model_{0}{1}_{2}_pool_size_{3}_tau_{4}_' \
                     'max_search_round_{5}_run_{6}.txt'.format(

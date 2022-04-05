@@ -512,7 +512,7 @@ class SurrogateModel:
             # setting up hyperparameters for NN depending on number of binaries
             num_bin = min(30, len(bin_index)-1)
 
-            epochs = min(500, 50*len(bin_index)+50)
+            epochs = min(500, 12*len(bin_index))
             if len(bin_index) > 1:
                 loss = 'categorical_crossentropy'
                 activation = 'sigmoid'
@@ -734,17 +734,21 @@ class SurrogateModel:
             loss = 'binary_crossentropy'
         self.clf_batch[block_id].compile(loss=loss, optimizer='adam',
                                          metrics=['acc'])
-        self.clf_batch[block_id].fit(X_scaled, y, epochs=100, verbose=0)
+        self.clf_batch[block_id].fit(X_scaled, y, epochs=5, verbose=0)
 
     def add_train_data(self, block_id, dir_orig_space, feasible_point):
-
+        '''
+        :param: dir_orig_space
+        :type:  ndarray
+        :param: feasible_point, contains only the binary variables of feasible point
+        :type: ndarray
+        '''
+        print('dir_orig_space', dir_orig_space)
+        print('feasible point', feasible_point)
         last_X = dir_orig_space.reshape(1, -1)
-        bin_index = self.binary_index[block_id]
-        last_y = []
-        for i in bin_index:
-            last_y.append(feasible_point(i))
-        last_y = np.array(last_y)
-        last_y = last_y.reshape(1, -1)
+
+        last_y = feasible_point
+
 
         self.X_train[block_id] = np.concatenate((self.X_train[block_id], last_X), axis=0)
         self.y_train[block_id] = np.concatenate((self.y_train[block_id], last_y), axis=0)
