@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # sub-problems and original problems (primal heuristics)
     for i in range(1, n_runs + 1):
         solver = DecogoSolver()
-        file_name = 'ML_start_in_FW.txt'.format()
+        file_name = 'ML_S4L4_fw2main.txt'.format()
         '''
         'DESS_model_{0}{1}_{2}_pool_size_{3}_tau_{4}_' \
                     'max_search_round_{5}_run_{6}.txt'.format(
@@ -66,4 +66,4 @@ if __name__ == '__main__':
                         pool_size, tau, max_round, i)
                         '''
         solver.optimize(model, file_name=file_name)
-        #, file_name=file_name
+

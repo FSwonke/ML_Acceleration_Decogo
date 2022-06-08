@@ -9,6 +9,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
+from matplotlib import cm
 from matplotlib.patches import Rectangle
 import seaborn as sns
 import pandas as pd
@@ -75,6 +76,7 @@ class RefactoryColGen:
         self.counter = {}
         self.update = False
         self.main_iteration = False
+        self.columns_generated = None
         # initiation of lists for phase list
         for k in range(self.problem.block_model.num_blocks):
             self.phase_list[k] = []
@@ -127,17 +129,12 @@ class RefactoryColGen:
                         .format(self.settings.ml_sub_solve))
             logger.info('CG approx: {0} '
                         .format(self.settings.exact_solve_data))
+
             if self.settings.exact_solve_data is False:
-                if self.settings.ml_sub_solve is False:
-                    self.column_generation(approx_solver=True)  # solve sub-problems
-                else:
-                    self.column_generation_ml(approx_solver=True)
-                # approximately
+                self.column_generation(approx_solver=True)  # solve sub-problems
             else:
-                if self.settings.ml_sub_solve is False:
-                    self.column_generation()  # solve sub-problems exactly
-                else:
-                    self.column_generation_ml()
+                self.column_generation()  # solve sub-problems exactly
+
             # approximately
 
             logger.info('Approx ColGen done')
@@ -174,11 +171,19 @@ class RefactoryColGen:
 
                 break
 
+        surrogate = self.result.current_used_time
         j = 0
+        logger.info('cg fast approx: {0}'.format(self.settings.cg_fast_approx))
         while True:  # apply cg_fast_fw or approx_cg
             j += 1
             if j == 2:
+                # initiate ML Surrogate Model and deactivate local solve
                 self.start_ml = True
+                self.settings.cg_fast_approx = False
+                surrogate = self.result.current_used_time
+                if self.settings.ml_sub_solve:
+                    logger.info('Start time Surrogate Model: {0}'.format(surrogate))
+
             tic = time.time()
 
             logger.info('CG with ML: {0} '
@@ -201,7 +206,7 @@ class RefactoryColGen:
                 if self.settings.ml_sub_solve is False:
                     self.column_generation(approx_solver=True)
                 else:
-                    self.column_generationml(approx_solver=True)
+                    self.column_generation_ml(approx_solver=True)
 
                 time_init_cg = round(time.time() - tic, 2)
                 logger.info('Time used for init approx cg '
@@ -232,7 +237,7 @@ class RefactoryColGen:
                     .format(self.result.main_iterations,
                             round(self.result.current_used_time, 2)))
         logger.info('-----------------------------------------------------')
-
+        cg_fast = self.result.current_used_time
         # flag which says if reduced cost is positive and we can stop
         stop_by_cg_converg = False
 
@@ -332,11 +337,11 @@ class RefactoryColGen:
 
                 if self.problem.block_model.sub_models[k].linear is False:
 
-                    if self.settings.ml_sub_solve is False:
-                        fpoint, _, delta_k, new_point, _ = self.generate_column(k, reduced_cost_direction)
-                    else:
-                        fpoint, _, delta_k, _, _ = self.generate_column_ml(k, reduced_cost_direction,
-                                                                           x_ia=x_ia, global_solve=True)
+                    #if self.settings.ml_sub_solve is False:
+                    point, _, delta_k, new_point, _ = self.generate_column(k, reduced_cost_direction)
+                    #else:
+                        #fpoint, _, delta_k, _, _ = self.generate_column_ml(k, reduced_cost_direction,
+                        #                                                   x_ia=x_ia, global_solve=True)
 
                     if delta_k <= -1e-3:
                         hat_k_set.append(k)
@@ -442,10 +447,10 @@ class RefactoryColGen:
         print('subproblems in main iteration')
         print(self.n_subproblems_main)
         k=0
-        instances = ['FW_exact', 'Decogo_wo_ml', 'ML_start_in_FW']
-        logs_path_name ='tests/solver/refactory_colgen'
-        self.parse_files_construct_table(instances=instances, logs_path_name=logs_path_name)
-
+        instances = ['DECOGO', 'Decogo_L4S4_2', 'cgfa1_esd0_cgffw1_mlss1_2', 'ML4_3_S4L4', 'ML4_4_S4L4']
+        #instances = ['DECOGO_L8S8', 'ML4_32_S8L8']
+        #self.parse_files_construct_table(instances, cg_fast, surrogate)
+        #self.plot_generated_columns()
         #self.testing()
 
     def ia_init(self, duals=None):
@@ -817,7 +822,11 @@ class RefactoryColGen:
 
         logger.info('\nNew columns in FastCG:')
         logger.info(list(new_columns_generated_cumulative.values()))
-
+        if self.columns_generated is None:
+            self.columns_generated = np.array(list(new_columns_generated_cumulative.values())).reshape(1, -1)
+        else:
+            self.columns_generated = np.concatenate((self.columns_generated,
+                                                     np.array(list(new_columns_generated_cumulative.values())).reshape(1, -1)), axis=0 )
         # number of unfixed nlp subproblems during CG
         logger.info('number of unfixed nlp subproblems '
                     'solved during CG: {0}'
@@ -1289,11 +1298,12 @@ class RefactoryColGen:
         '''
 
         #append predictions  to plot list
+        '''
         if self.predictions[block_id] is None:
             self.predictions[block_id] = y_clf.reshape(1, -1)
         else:
             self.predictions[block_id] = np.concatenate((self.predictions[block_id], y_clf.reshape(1, -1)), axis=0)
-
+        '''
 
         # get training data
         #training_data = self.problem.get_training_data()
@@ -1308,17 +1318,22 @@ class RefactoryColGen:
         logger.info('Size of Training Data: {0}'.format(X_train.shape[0]))
         # scaler = self.problem.sub_problems[block_id].get_scaler
         # call anomaly detection (Scaling and PCA)
-
+        tic_pca = time.time()
         T_tr, T_n, n_components = self.anomaly_detection(block_id, X_train, dir_orig_space)
-
-        alpha = 0.05 #self.alpha
+        toc_pca = time.time()
+        logger.info('Time used for PCA: {0}'.format(toc_pca-tic_pca))
+        alpha = 0.05
         df = n_components
-        t2_bool = self.hotellings_t2(block_id=block_id, T=T_tr, x_n=T_n, n_components=n_components, alpha=alpha, df=df)
-        # SPE (Squared Prediction Error)
-        spe_bools = self.spe(block_id=block_id, T=T_tr, t_n=T_n, n_components=n_components)
+        tic_t2 = time.time()
+        if n_components > 1:
+            t2_bool = self.hotellings_t2(block_id=block_id, T=T_tr, x_n=T_n, n_components=n_components, alpha=alpha, df=df)
+        else:
+            t2_bool = self.ttest(block_id, T=T_tr, x_n=T_n, n_components=n_components, alpha=alpha)
+        toc_t2 = time.time()
+        logger.info('Time used for T2: {0}'.format(toc_t2 - tic_t2))
         if t2_bool == 1:
             update_model=True
-            print("pca >> t2 outlier")
+            print("PCA >> T2 Outlier")
         elif t2_bool == 0:
             update_model=False
         self.anomaly[block_id].append(t2_bool)
@@ -1330,15 +1345,18 @@ class RefactoryColGen:
             sol[idx] = y_clf[n]
 
         # local solve / new point = solution is feasible
+        tic_local = time.time()
         feasible_point, primal_bound, reduced_cost, is_new_point, column = self.local_solve_subproblem(block_id,
                                                                                                      dir_im_space,
                                                                                                      x_k=sol)
-        min_point, min_obj_val = self.problem.get_min_inner_point(block_id, dir_orig_space)
+        toc_local = time.time()
+        logger.info('Time used for local solve: {0}'.format(toc_local - tic_local))
+        # min_point, min_obj_val = self.problem.get_min_inner_point(block_id, dir_orig_space)
 
         if is_new_point:
-
+            min_point, min_obj_val = self.problem.get_min_inner_point(block_id, dir_orig_space)
             print('New point: ', is_new_point)
-            self.newpoints[block_id].append((self.n_subproblems_main[block_id]))
+            #self.newpoints[block_id].append((self.n_subproblems_main[block_id]))
 
             # primal bound = new point obj val
             if primal_bound <= min_obj_val:
@@ -1352,15 +1370,17 @@ class RefactoryColGen:
             print('Update Surrogate Model')
 
             # correction by global solver
+            tic_global = time.time()
             feasible_point, reduced_cost, primal_bound, _, \
                 is_new_point, column = self.global_solve_subproblem(block_id, dir_im_space)
-
+            toc_global = time.time()
+            logger.info('Time used for global solve: {0}'.format(toc_global - tic_global))
             # extract binaries
             y_corr = np.zeros((1, len(binary_index))).flatten()
             for k, index in enumerate(binary_index):
                 y_corr[k] = feasible_point[index]
 
-            self.corr_idx[block_id].append(self.n_subproblems_main[block_id])
+            #self.corr_idx[block_id].append(self.n_subproblems_main[block_id])
             '''
             if self.corrections[block_id] is None:
                 self.corrections[block_id] = y_corr.reshape(1, -1)
@@ -1373,9 +1393,12 @@ class RefactoryColGen:
               #                                                 dir_im_space)
 
             # Update Surrogate Model
+            tic_update = time.time()
             self.problem.sub_problems[block_id].ml_update(block_id, dir_orig_space, y_corr.reshape(1, -1))
+            toc_update = time.time()
+            logger.info('Time used for updating: {0}'.format(round(toc_update - tic_update, 5)))
             self.update = False
-        self.PC_tr[block_id] = np.concatenate((T_tr, T_n), axis=0)
+        #self.PC_tr[block_id] = np.concatenate((T_tr, T_n), axis=0)
 
         return update_model, feasible_point, reduced_cost, primal_bound, is_new_point, column
 
@@ -1400,49 +1423,39 @@ class RefactoryColGen:
         T = T[:, 0:n_components]
         #y_n = x_n[:, 0:self.PC_main[block_id].shape[1]]
         y_n = x_n[:, 0:n_components]
-        ### new calculation
+
         nx, p = T.shape
         ny, _ = y_n.shape
 
         delta = np.mean(T, axis=0) - np.mean(y_n, axis=0)
         # covariance matrix of training data (PC´s)
         Sx = np.cov(T, rowvar=False)
-
+        #print('Sx',Sx)
         # covariance matrix of incoming data
         Sy = np.cov(y_n, rowvar=False)
 
         S_pooled = ((nx - 1) * Sx + (ny - 1) * Sy) / (nx + ny - 2)
-
+        #print('S_pooled', S_pooled)
         t2 = (nx * ny) / (nx + ny) * np.matmul(np.matmul(delta.transpose(), np.linalg.inv(S_pooled)), delta)
 
-
-        mean, var = np.mean(T), np.var(T)
-        # score of training data
-        T_score = (T - mean) ** 2 / var
-        self.t_score[block_id] = T_score
-        # score of the new direction normalized value of score
-        y_score = (y_n - mean) ** 2 / var
-
         anomaly_score_threshold = stats.chi2.ppf(q=(1 - alpha), df=df)
-        k = 0
-        t2_bools = []
 
-        #print('anomaly_score ', anomaly_score_theshold)
-        for k in range(y_n.shape[0]):
-            if y_score.flatten()[k] > anomaly_score_threshold:
-                outlier = True
-            else:
-                outlier = False
-            t2_bools.append(outlier)
-        '''
-        if self.y_score[block_id] is None:
-            self.y_score[block_id] = y_score
-        else:
-            self.y_score[block_id] = np.concatenate((self.y_score[block_id], y_score), axis=0)
-        '''
-        self.a_threshold[block_id] = anomaly_score_threshold
-        self.t2[block_id].append(t2)
         if t2 >= anomaly_score_threshold:
+            t2_bool = 1
+        else:
+            t2_bool = 0
+
+        return t2_bool
+
+    def ttest(self, block_id, T, x_n, n_components, alpha):
+        T = T[:, 0:n_components]
+        x_n = x_n[:, 0:n_components]
+        t_statistic, _ = stats.ttest_ind(T, x_n)
+        chi2_statistic, _ = stats.chisquare(T, x_n)
+        statistic = t_statistic
+        anomaly_score_threshold = stats.chi2.ppf(q=1 - alpha, df=1)
+
+        if statistic > anomaly_score_threshold:
             t2_bool = 1
         else:
             t2_bool = 0
@@ -1454,22 +1467,24 @@ class RefactoryColGen:
         x_dim = T.shape[1]
         if n_components < x_dim:
 
-            T_tilde = T[:, 0:self.PC_main[block_id].shape[1]]
+            T_tilde = T[:, 0:n_components]
             spe = np.sum(T_tilde * T_tilde, axis=1)
             spe2over3 = np.cbrt(spe * spe)
             mean, std = np.mean(spe2over3), np.std(spe2over3)
             spe_threshold = np.power(mean + std, 3)
             self.spe_threshold[block_id] = spe_threshold
-            t_n_tilde = t_n[:, 0:self.PC_main[block_id].shape[1]]
+            t_n_tilde = t_n[:, 0:n_components]
             spe_n = np.sum(t_n_tilde * t_n_tilde, axis=1)
 
             spe_bool = spe_n > spe_threshold
+            '''
             self.spe_main[block_id] = spe
-
+            
             if self.spe_score[block_id] is None:
                 self.spe_score[block_id] = spe_n.reshape(1, -1)
             else:
                 self.spe_score[block_id] = np.concatenate((self.spe_score[block_id], spe_n.reshape(1, -1)), axis=0)
+            '''
         else:
             spe_bool = False
 
@@ -1503,12 +1518,13 @@ class RefactoryColGen:
                 break
             else:
                 accumulated_var_ratio += explained_variance_ratio[n + 1]
-
+        '''
         if self.PC_main[block_id] is None:
             self.PC_main[block_id] = T_n[:, 0:n_components]
         else:
             self.PC_main[block_id] = np.concatenate((self.PC_main[block_id], T_n[:, 0:self.PC_main[block_id].shape[1]]), axis=0)
-        n_components = max(n_components, 2)
+        '''
+
         return T_tr, T_n, n_components
 
     def write_text(self, block_id):
@@ -1577,8 +1593,8 @@ class RefactoryColGen:
 
         # special settings for main iterations to get only global solver involved
         if global_solve:
-            global_counter = 2
-            activate_ml = False
+            global_counter = 1
+            #activate_ml = False
             approx_solver = False
         else:
             global_counter = 10
@@ -1783,7 +1799,7 @@ class RefactoryColGen:
                 '''
                 fpoint, _, reduced_cost_list[k], \
                     new_point, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia,
-                                                  approx_solver=approx_solver)
+                                                  approx_solver=approx_solver, global_solve=True)
 
 
                 #'''
@@ -1814,7 +1830,7 @@ class RefactoryColGen:
                         '''
                         fpoint, _, _, \
                             new_point, _ = self.generate_column_ml(k, reduced_cost_direction, x_ia=x_ia,
-                                                      approx_solver=approx_solver)
+                                                      approx_solver=approx_solver, global_solve=True)
 
 
                         generate_column_slack_time_list[k] = \
@@ -1837,7 +1853,14 @@ class RefactoryColGen:
                 logger.info('New columns added: {0}'
                             .format(str(new_columns_generated)))
                 break
-
+        '''
+        print(self.columns_generated)
+        if self.columns_generated is None:
+            self.columns_generated = np.array(new_columns_generated).reshape(1, -1)
+        else:
+            self.columns_generated = np.concatenate((self.columns_generated,
+                                                     np.array(new_columns_generated).reshape(1, -1)), axis=0 )
+        '''
         self.result.num_cg_iterations += i
 
         # number of MINLP subproblems during CG
@@ -1930,19 +1953,21 @@ class RefactoryColGen:
             for k in range(self.problem.block_model.num_blocks):
                 tic = time.time()
                 if self.settings.cg_fast_approx:
+                    print('läuft nicht')
                     _, _, reduced_cost_list[k], new_point, r_k = \
                         self.local_solve_subproblem(
                             k, direction, x_k=x_ia.get_block(k))
                 else:
                     #_, _, reduced_cost_list[k], new_point, r_k = \
                      #   self.generate_column(k, direction)
-
+                    print('läuft')
                     _, _, reduced_cost_list[k], new_point, r_k = \
                         self.generate_column_ml(k, direction, heuristic=True,
                             approx_solver=False, x_ia=x_ia)
 
                     generate_column_time_list[k] = round(time.time() - tic,
-                                                     2)
+                                                 2)
+                logger.info('Subproblem Time: {0}'.format(time.time()-tic))
                 if r_k is not None:
                     r_cg.set_block(k, r_k)
                 else:
@@ -2049,7 +2074,11 @@ class RefactoryColGen:
 
         logger.info('\nNew columns in FastCG:')
         logger.info(list(new_columns_generated_cumulative.values()))
-
+        if self.columns_generated is None:
+            self.columns_generated = np.array(list(new_columns_generated_cumulative.values())).reshape(1, -1)
+        else:
+            self.columns_generated = np.concatenate((self.columns_generated,
+                                                     np.array(list(new_columns_generated_cumulative.values())).reshape(1, -1)), axis=0 )
         # number of unfixed nlp subproblems during CG
         logger.info('number of unfixed nlp subproblems '
                     'solved during CG: {0}'
@@ -2290,17 +2319,26 @@ class RefactoryColGen:
         :param:
         :type:
         '''
+        tic = time.time()
         bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
+        toc = time.time()
+        logger.info('Time used for Surrogate Model: {0}'.format(toc - tic))
 
+        tic = time.time()
         update_model, feasible_point, reduced_cost, primal_bound, \
             is_new_point, column = self.eval_prediction(block_id=block_id, dir_im_space=direction,
                                                                       y_clf=bin_pred,
                                                                       x_ia=x_ia,
                                                                       binary_index=bin_index)
+        toc = time.time()
+        logger.info('Time used for Evaluation: {0}'.format(toc - tic))
+        '''
         update_model = False
+        
         if update_model:
             #self.init_ML(block_id)
             self.update_Surrogate_Model(block_id)
+        '''
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
     def testing(self):
@@ -2613,8 +2651,8 @@ class RefactoryColGen:
         plt.grid()
         plt.savefig('Times'+str(block_id)+'.png', format='png', dpi=200)
 
-    def parse_files_construct_table(self, instances, logs_path_name='tests/solver/refactory_colgen'):
-
+    def parse_files_construct_table(self, instances, fast_cg, surrogate):
+        logs_path_name = 'tests/solver/refactory_colgen'
         root_name = os.path.dirname(os.getcwd())
         while True:
             base = os.path.basename(root_name)
@@ -2669,10 +2707,39 @@ class RefactoryColGen:
         for i, problem_name in enumerate(instances):
             #print(*zip(*total_time_cg_bound[i]))
             total_time_cg_bound[i].pop(0)
-            ax.plot(*zip(*total_time_cg_bound[i]), label=problem_name)
+            ax.plot(*zip(*total_time_cg_bound[i]), label=problem_name, alpha=0.75)
 
+        plt.vlines(fast_cg, -62e6, -53e6, color='black', linestyles='dashed')
+        plt.vlines(surrogate, -62e6, -53e6, color='black', label='SM phase', linestyles='dashed')
         ax.legend()
         plt.tight_layout()
         plt.grid()
         fig.savefig('cg_relaxation.png', dpi=300, format='png')
 
+    def plot_generated_columns(self):
+        n = self.columns_generated.shape[0]
+        blocks = self.columns_generated.shape[1]
+        iter = np.arange(n)
+        blocks = np.arange(blocks)
+        _iter, _blocks = np.meshgrid(iter, blocks)
+        i, b = _iter.ravel(), _blocks.ravel()
+        cg = self.columns_generated.ravel()
+        bottom = np.zeros_like(cg)
+        width = depth = 0.5
+        fig = plt.figure(figsize=(8, 6))
+        ax1 = fig.add_subplot(111)#, projection='3d')
+        hm = ax1.imshow(self.columns_generated)
+        #bar = ax1.bar3d(i, b, bottom, width, depth, cg, shade=True)
+        #fig.colorbar(hm, ax=ax1, shrink=0.5, aspect=5)
+        for j in range(n):
+            for i in range(self.columns_generated.shape[1]):
+                ax1.text(i, j, self.columns_generated[j, i])
+        ax1.set_title('Columns generated')
+        #ax1.set_xticks(blocks)
+        #ax1.set_xticklabels(blocks)
+        ax1.set_xlabel('blocks')
+        #ax1.set_yticks(iter)
+        #ax1.set_yticklabels(iter)
+        ax1.set_ylabel('iteration')
+        #ax1.set_zlabel('columns')
+        plt.savefig('Columns_generated.png', format='png', dpi=200)

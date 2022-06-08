@@ -506,11 +506,11 @@ class SurrogateModel:
 
             # split training_data into input/output
             X, y = self.split_data(block_id, training_data, shuffle_data=False)
-            print('Train split method')
-            print('X shape', X.shape)
-            print('y shape', y.shape)
+            #print('Train split method')
+            #print('X shape', X.shape)
+            #print('y shape', y.shape)
             # setting up hyperparameters for NN depending on number of binaries
-            num_bin = min(30, len(bin_index)-1)
+            num_bin = min(30, len(bin_index)+1)
 
             epochs = min(500, 12*len(bin_index))
             if len(bin_index) > 1:
@@ -523,10 +523,9 @@ class SurrogateModel:
             #train_ratio = round(train_set / X.shape[0], 2)
             #train_test_ratio = split
             # seperate to train & test set (training set is last added data
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split,
-                                                                shuffle=False)
-            print('training shape ', X_train.shape)
-            print('test shape', X_test.shape)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split, shuffle=False)
+            #print('training shape ', X_train.shape)
+            #print('test shape', X_test.shape)
             X_val = X_test[:10, :]
             y_val = y_test[:10, :]
             self.X_validation[block_id] = X_test
@@ -538,7 +537,7 @@ class SurrogateModel:
             self.clf_batch[block_id].add(Dense(X_train.shape[1], input_dim=X_train.shape[1]))
 
             # Hidden Layer
-            #self.clf_batch[block_id].add(Dense(num_bin, activation='sigmoid'))
+            self.clf_batch[block_id].add(Dense(num_bin, activation='sigmoid'))
             #self.clf_batch[block_id].add(Dropout(rate=0.3))
             #self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
             #self.clf_batch[block_id].add(Dropout(rate=0.3))
@@ -562,26 +561,27 @@ class SurrogateModel:
             print('fit model to block:', block_id)
             model = self.clf_batch[block_id].fit(X_tr_scaled, y_train,
                                                  validation_data=(X_val_scaled, y_val), epochs=epochs, verbose=0)
-
+            plot = False
+            if plot:
             #Plot training progress
-            plt.figure(figsize=(14, 5), dpi=200)
+                plt.figure(figsize=(14, 5), dpi=200)
 
-            plt.subplot(1, 2, 1)
-            plt.title('Loss')
-            plt.plot(model.history['loss'], label='Train')
-            plt.plot(model.history['val_loss'], label='Validation')
-            plt.legend()
-            plt.xlabel('epochs')
-            plt.grid()
-            plt.subplot(1, 2, 2)
-            plt.title('Accuracy')
-            plt.plot(model.history['acc'], label='Train')
-            plt.plot(model.history['val_acc'], label='Validation')
-            plt.legend()
-            plt.xlabel('epochs')
-            #plt.ylim(0, 1)
-            plt.grid()
-            plt.savefig('Acc&Loss_block_'+str(block_id)+'test_set'+str(split)+'.png', format='png', dpi=200)
+                plt.subplot(1, 2, 1)
+                plt.title('Loss')
+                plt.plot(model.history['loss'], label='Train')
+                plt.plot(model.history['val_loss'], label='Validation')
+                plt.legend()
+                plt.xlabel('epochs')
+                plt.grid()
+                plt.subplot(1, 2, 2)
+                plt.title('Accuracy')
+                plt.plot(model.history['acc'], label='Train')
+                plt.plot(model.history['val_acc'], label='Validation')
+                plt.legend()
+                plt.xlabel('epochs')
+                #plt.ylim(0, 1)
+                plt.grid()
+                plt.savefig('Acc&Loss_block_'+str(block_id)+'test_set'+str(split)+'.png', format='png', dpi=200)
         else:
             print('no binary variables in block', block_id)
 
@@ -734,7 +734,7 @@ class SurrogateModel:
             loss = 'binary_crossentropy'
         self.clf_batch[block_id].compile(loss=loss, optimizer='adam',
                                          metrics=['acc'])
-        self.clf_batch[block_id].fit(X_scaled, y, epochs=5, verbose=0)
+        self.clf_batch[block_id].fit(X_scaled, y, epochs=10, verbose=0)
 
     def add_train_data(self, block_id, dir_orig_space, feasible_point):
         '''
