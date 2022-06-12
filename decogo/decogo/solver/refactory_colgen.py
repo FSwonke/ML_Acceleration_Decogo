@@ -514,10 +514,7 @@ class RefactoryColGen:
 
             z, x_ia, w_ia, slacks, duals, obj_value_ia = \
                 self.problem.master_problems.solve_ia(self.settings.lp_solver)
-            print('=======x_ia========')
-            #print(x_ia)
-            #print(type(x_ia[0, :]))
-            #print(x_ia[0, :])
+
             self.result.cg_relaxation = obj_value_ia
             if i == 0:
                 initial_obj_value_ia = obj_value_ia
@@ -548,18 +545,12 @@ class RefactoryColGen:
             # generate columns according to dual values
             for k in blocks:
                 tic = time.time()
-                #'''
+
                 _, _, reduced_cost_list[k], new_point, _ = \
                     self.generate_column(k, reduced_cost_direction,
                                          approx_solver=approx_solver,
                                          x_k=x_ia.get_block(k))
-                '''
-                fpoint, _, reduced_cost_list[k], \
-                    new_point, _ = self.ML_ColGen(k, reduced_cost_direction, x_ia=x_ia,
-                                                  approx_solver=approx_solver)
 
-
-                '''
                 generate_column_time_list[k] = round(time.time() - tic, 2)
                 if new_point is True:
                     new_columns_generated[k] += 1
@@ -598,8 +589,7 @@ class RefactoryColGen:
 
             if i >= self.settings.cg_max_iter:
                 logger.info('Iteration limit')
-                # logger.info('Reduced cost: {0}'
-                #             .format(str(reduced_cost_list)))
+
                 logger.info('New columns added: {0}'
                             .format(str(new_columns_generated)))
                 break
@@ -709,11 +699,7 @@ class RefactoryColGen:
                 else:
                     _, _, reduced_cost_list[k], new_point, r_k = \
                         self.generate_column(k, direction)
-                    '''
-                    _, _, reduced_cost_list[k], new_point, r_k = \
-                        self.ML_ColGen(k,direction, heuristic=True,
-                            approx_solver=False, x_ia=x_ia)
-                    '''
+
                     generate_column_time_list[k] = round(time.time() - tic,
                                                      2)
                 if r_k is not None:
@@ -1527,29 +1513,6 @@ class RefactoryColGen:
 
         return T_tr, T_n, n_components
 
-    def write_text(self, block_id):
-
-        current_time = time.ctime()
-        path = r"C:\Users\Finn Swonke\Documents\HAW\Semester 3\MP\Project\decogo\tests\solver\refactory_colgen\Results.txt"
-
-        with open(path, 'a') as f:
-            if block_id == 0:
-                f.write('\n')
-                f.write('Loadcase: L4S4'+'\n')
-                f.write('Time: ' + str(current_time)+'\n')
-                f.write('CASE: 0/1/1'+'\n')
-                f.write('Primal Bound: ' + str(self.result.primal_bound) + '\n')
-                f.write('Dual Bound: ' + str(self.result.cg_relaxation) + '\n')
-                f.write('Total number of columns: ' + str(self.result.total_number_columns) + '\n')
-            f.write('Block: ' + str(block_id) + '\n')
-            f.write('New Points: ' + str(len(self.newpoints[block_id])) + '\n')
-            f.write('Predictions: ' + str(len(self.predictions[block_id])) + '\n')
-            f.write('Corrections: ' + str(len(self.corrections[block_id])) + '\n')
-            #f.write('Accuracy: ' + str(avg))
-
-            f.write(""+'\n')
-            f.close()
-
     def generate_column_ml(self, block_id, direction, heuristic=True,
                                 approx_solver=False, x_ia=None, global_solve=False):
         """Generates the inner point (and corresponding column) either
@@ -2312,12 +2275,12 @@ class RefactoryColGen:
 
     def ML_ColGen(self, block_id, direction, x_ia):
         '''
-        :param: block_id
-        :type: in
-        :param: direction; direction image space
-        :type: ndarray
-        :param:
-        :type:
+        :param block_id: Block Identifier
+        :type block_id: int
+        :param direction: direction original space
+        :type direction: ndarray
+        :param x_ia: start_point for solving subproblems
+        :type x_ia: BlockVector or None
         '''
         tic = time.time()
         bin_pred, bin_index = self.ml_sub_solve(block_id, direction)
@@ -2332,13 +2295,7 @@ class RefactoryColGen:
                                                                       binary_index=bin_index)
         toc = time.time()
         logger.info('Time used for Evaluation: {0}'.format(toc - tic))
-        '''
-        update_model = False
-        
-        if update_model:
-            #self.init_ML(block_id)
-            self.update_Surrogate_Model(block_id)
-        '''
+
         return feasible_point, primal_bound, reduced_cost, is_new_point, column
 
     def testing(self):

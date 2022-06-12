@@ -506,9 +506,7 @@ class SurrogateModel:
 
             # split training_data into input/output
             X, y = self.split_data(block_id, training_data, shuffle_data=False)
-            #print('Train split method')
-            #print('X shape', X.shape)
-            #print('y shape', y.shape)
+
             # setting up hyperparameters for NN depending on number of binaries
             num_bin = min(30, len(bin_index)+1)
 
@@ -520,12 +518,10 @@ class SurrogateModel:
                 loss = 'binary_crossentropy'
                 activation = 'sigmoid'
 
-            #train_ratio = round(train_set / X.shape[0], 2)
-            #train_test_ratio = split
+
             # seperate to train & test set (training set is last added data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=split, shuffle=False)
-            #print('training shape ', X_train.shape)
-            #print('test shape', X_test.shape)
+
             X_val = X_test[:10, :]
             y_val = y_test[:10, :]
             self.X_validation[block_id] = X_test
@@ -538,9 +534,7 @@ class SurrogateModel:
 
             # Hidden Layer
             self.clf_batch[block_id].add(Dense(num_bin, activation='sigmoid'))
-            #self.clf_batch[block_id].add(Dropout(rate=0.3))
-            #self.clf_batch[block_id].add(Dense(num_bin, activation='tanh'))
-            #self.clf_batch[block_id].add(Dropout(rate=0.3))
+
 
             # Output Layer
             self.clf_batch[block_id].add(Dense(y_train.shape[1], activation=activation))
@@ -553,15 +547,15 @@ class SurrogateModel:
             self.scaler[block_id] = StandardScaler().fit(X_train, y_train)
             X_tr_scaled = self.scaler[block_id].transform(X_train)
             X_val_scaled = self.scaler[block_id].transform(X_val)
+
             # add to attributes
             self.X_train[block_id] = X_train
             self.y_train[block_id] = y_train
-            #self.X_validation[block_id] = X_test
-            #self.y_validation[block_id] = y_test
+
             print('fit model to block:', block_id)
             model = self.clf_batch[block_id].fit(X_tr_scaled, y_train,
                                                  validation_data=(X_val_scaled, y_val), epochs=epochs, verbose=0)
-            plot = False
+            plot = True
             if plot:
             #Plot training progress
                 plt.figure(figsize=(14, 5), dpi=200)
@@ -669,31 +663,20 @@ class SurrogateModel:
 
     def sub_solve(self, block_id, direction):
         """ takes direction to predict binaries; takes point from for comparing prediction & solution
-        :param: block_id
-        :type: int
+        :param block_id: Block Identifier
+        :type block_id:int
         :param: direction
-        :type: nd array
-        :param: point; feasible point from global subsolver (for comparison)
-        :type: nd array
-        :param: x_ia ; primal solution from LP-IA Masterproblem, includes continuous variables, starting point for NLP-solver
-        :type: nd array
+        :type: direction, ndarray
+
         """
         print('============================================ ')
         print('    sub solve block', block_id, '            ')
         print('============================================ ')
 
         index = self.binary_index[block_id]
-
         pred = self.predict(block_id, np.array([direction]))
-
         bin_pred = pred.flatten()
 
-        '''
-        :param: prediction, only binaries (predicted)
-        :param: p, only binaries (global solve)
-        :param: x, complete vector (binaries & continuous) with predicted
-        :param: point, point from global sub solver
-        '''
         return bin_pred, index
 
     def get_score(self, prediction, test):
@@ -712,16 +695,18 @@ class SurrogateModel:
         score_arr = np.array(l)
         score_mean = np.mean(score_arr)
         score_var = np.var(score_arr)
-        return (score_mean, score_var)
+        return score_mean, score_var
 
     def update_model(self, block_id, dir_orig_space, feasible_point):
+        ''' Update Surrogate Model with new data only
+        :param block_id, Block Identifier
+        :type block_id: int
+        :param dir_orig_space: direction in original space
+        :type dir_orig_space: ndarray
+        :param feasible_point: Feasible Point
+        :type feasible_point: ndarray
         '''
-        update Surrogate Model with new data only
-        :param
-        '''
-        print('')
-        print('>>>>>Updating<<<<<')
-        print('')
+
         X = dir_orig_space
 
         X_scaled = self.scaler[block_id].transform(X)
@@ -737,18 +722,18 @@ class SurrogateModel:
         self.clf_batch[block_id].fit(X_scaled, y, epochs=10, verbose=0)
 
     def add_train_data(self, block_id, dir_orig_space, feasible_point):
+        '''Adds training data to the Surrogate Model
+        :param block_id, Block Identifier
+        :type block_id: int
+        :param dir_orig_space: direction in original space
+        :type dir_orig_space: ndarray
+        :param feasible_point: Feasible Point
+        :type feasible_point: ndarray
         '''
-        :param: dir_orig_space
-        :type:  ndarray
-        :param: feasible_point, contains only the binary variables of feasible point
-        :type: ndarray
-        '''
-        print('dir_orig_space', dir_orig_space)
-        print('feasible point', feasible_point)
+
         last_X = dir_orig_space.reshape(1, -1)
 
         last_y = feasible_point
-
 
         self.X_train[block_id] = np.concatenate((self.X_train[block_id], last_X), axis=0)
         self.y_train[block_id] = np.concatenate((self.y_train[block_id], last_y), axis=0)
